@@ -1,0 +1,62 @@
+### Linked Data ###
+# base uri voor linked data, nodes worden op basis van deze uri opgebouwd:
+#   {BASE_URI}{COLLECTION_ID}/id/{klasse}/{uuid}
+BASE_URI: 'https://linkeddata.cultureelerfgoed.nl/'
+COLLECTION_ID: 'rce/bibliotheek'
+# uri van de dataset zelf (schema:isPartOf van elk record)
+DATASET_URI: 'https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/'
+DATASET_NAME: 'Bibliotheek RCE'
+DATASET_DESCRIPTION: 'Boeken en tijdschriftartikelen uit de catalogus van de bibliotheek van de Rijksdienst voor het Cultureel Erfgoed.'
+
+# Licentie van de metadata (IRI). Leeg = geen schema:license opnemen. Nog te besluiten.
+LICENSE_URI: ''
+
+### Adlib-API: volledige records ###
+SRC_API: 'https://rce.adlibhosting.com/harvest/wwwopac.ashx'
+SRC_API_DATABASE: 'books'
+# records per pagina; een pagina duurt 5 tot 17 seconden
+SRC_API_LIMIT: 500
+# pagina's tegelijk ophalen
+SRC_API_WORKERS: 3
+
+### OAI-PMH: selectie van openbare records en de tijdschriftgegevens van artikelen ###
+SRC_URI: 'https://rce.adlibhosting.com/oaiapi/oai.ashx'
+# pauze tussen OAI-pagina's (seconden); de bron levert 10 records per pagina
+SRC_SLEEP: 0.05
+SRC_RETRIES: 5
+SRC_BACKOFF: 2.0
+
+# Bronnen. kind bepaalt welke transformatie wordt gebruikt (book | article).
+#   api_search  zoekopdracht in het Adlib-API (alle records die erin vallen worden opgehaald)
+#   scope       oai: alleen records die de OAI-set publiceert (de OAI bepaalt wat openbaar is)
+#               api: alles wat api_search oplevert
+#   oai         set en metadataPrefix; bij artikelen ook de bron van tijdschrift, jaar en pagina's
+SOURCES:
+  books:
+    kind: 'book'
+    api_search: 'priref<200000000 or priref>=300000000'
+    scope: 'oai'
+    oai: {set: 'books', prefix: 'oai_dc_book'}
+    # link naar het record in de catalogus
+    catalog_url: 'https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}'
+  article:
+    kind: 'article'
+    api_search: 'priref>=200000000 and priref<300000000'
+    scope: 'oai'
+    oai: {set: 'article', prefix: 'oai_dc'}
+    catalog_url: 'https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}'
+
+### Kwaliteitsbewaking ###
+# aantal records dat bij de transformatie mag falen voordat de run als mislukt geldt (0 = geen enkel)
+MAX_RECORD_ERRORS: 0
+# aantal records dat de OAI publiceert maar dat in het API niet (meer) gevonden wordt (0 = geen enkel)
+MAX_MISSING_IN_API: 0
+
+### Organisatie ###
+ORG_URI: 'https://www.cultureelerfgoed.nl/'
+ORG_NAME: 'Rijksdienst voor het Cultureel Erfgoed'
+ORG_SAME_AS: 'https://standaarden.overheid.nl/owms/terms/Rijksdienst_voor_het_Cultureel_Erfgoed'
+ORG_CONTACT_NAME: 'Infodesk van de RCE'
+ORG_CONTACT_EMAIL: 'thesauri@cultureelerfgoed.nl'
+ORG_ISIL: 'NL-AmfRCE'
+ORG_ALTNAME: 'Cultural Heritage Agency of the Netherlands'

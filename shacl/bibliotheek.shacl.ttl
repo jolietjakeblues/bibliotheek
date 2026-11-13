@@ -1,0 +1,374 @@
+@prefix sh:     <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix bib:    <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/shapes/> .
+
+# ---------------------------------------------------------------------------
+# SHACL-shapes voor de bibliotheek van de RCE (boeken en tijdschriftartikelen).
+#
+# Gebaseerd op de conventies van het Collectie Nederland-profiel
+# (https://github.com/cultureelerfgoed/collectie-nederland-schema-profile):
+#   - sh:message: "<Klasse>: <eigenschap> ontbreekt." / "... moet een URI zijn." enz.
+#   - Violation  = de data is fout of onbruikbaar; de pijplijn publiceert dan niet.
+#   - Warning    = de data hoort anders te zijn, maar publicatie kan door.
+# Elk record neemt zijn eigen nodes mee, dus elk uitvoerbestand is op zichzelf te valideren.
+#
+# Bekende hiaten in de bron, daarom Warning en geen Violation:
+#   - een artikel dat wel in de OAI staat maar niet in het Adlib-API, heeft geen titel (de OAI levert er geen);
+#   - boeken en artikelen zonder auteur of uitgever komen in de catalogus voor.
+# ---------------------------------------------------------------------------
+
+
+# ===========================================================================
+# schema:Book
+# ===========================================================================
+
+bib:BookMandatory
+    a              sh:NodeShape ;
+    sh:targetClass schema:Book ;
+    sh:name        "Book: verplichte eigenschappen"@nl ;
+    sh:description "Eigenschappen die voor elk boek aanwezig moeten zijn."@nl ;
+    sh:property    [ sh:path schema:name ;             sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:url ;              sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:url ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:sdDatePublished ;  sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:sdDatePublished ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:isPartOf ;         sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:isPartOf (de dataset) ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:identifier ;       sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:identifier (priref) ontbreekt."@nl ] ;
+.
+
+bib:BookRecommended
+    a              sh:NodeShape ;
+    sh:targetClass schema:Book ;
+    sh:name        "Book: aanbevolen eigenschappen"@nl ;
+    sh:description "Eigenschappen die voor elk boek aanwezig horen te zijn; ontbreken levert een waarschuwing op."@nl ;
+    sh:property    [ sh:path schema:datePublished ;    sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:datePublished ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:author ;           sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:author ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:publisher ;        sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:publisher ontbreekt."@nl ] ;
+.
+
+bib:BookMaxCount
+    a              sh:NodeShape ;
+    sh:targetClass schema:Book ;
+    sh:name        "Book: maximum aantal waarden"@nl ;
+    sh:description "Eigenschappen die maximaal één waarde mogen hebben."@nl ;
+    sh:property    [ sh:path schema:name ;          sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:name mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:url ;           sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:url mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:datePublished mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:sdDatePublished ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:sdDatePublished mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:numberOfPages ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:numberOfPages mag maximaal één waarde hebben."@nl ] ;
+.
+
+bib:BookType
+    a              sh:NodeShape ;
+    sh:targetClass schema:Book ;
+    sh:name        "Book: waardetype en formaat"@nl ;
+    sh:description "Eigenschappen waarvan de waarde van het juiste type of in het juiste formaat moet zijn."@nl ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:name moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+    sh:property    [ sh:path schema:url ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:url moet een URI zijn."@nl ] ;
+    # alleen de openbare catalogus; interne links (bv. proza.ocw.local) horen niet in de dataset
+    sh:property    [ sh:path schema:url ;
+                     sh:pattern "^https://catalogus\\.cultureelerfgoed\\.nl/Details/fullCatalogue/\\d+$" ;
+                     sh:severity sh:Violation ;
+                     sh:message "Book: schema:url moet een link naar de openbare catalogus zijn."@nl ] ;
+    sh:property    [ sh:path schema:isPartOf ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:isPartOf moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:sdDatePublished ; sh:datatype xsd:date ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:sdDatePublished moet de vorm JJJJ-MM-DD (xsd:date) hebben."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:datatype xsd:gYear ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:datePublished moet een jaartal (xsd:gYear) zijn."@nl ] ;
+    sh:property    [ sh:path schema:numberOfPages ; sh:datatype xsd:integer ; sh:minInclusive 1 ;
+                     sh:severity sh:Violation ;
+                     sh:message "Book: schema:numberOfPages moet een positief geheel getal zijn."@nl ] ;
+    sh:property    [ sh:path schema:isbn ; sh:pattern "^(\\d{9}[\\dX]|\\d{13})$" ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:isbn moet 10 of 13 tekens zonder streepjes hebben."@nl ] ;
+    sh:property    [ sh:path schema:size ; sh:datatype xsd:string ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:size moet tekst zonder taalcode zijn."@nl ] ;
+    sh:property    [ sh:path schema:description ; sh:datatype rdf:langString ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:description moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+    sh:property    [ sh:path schema:abstract ; sh:datatype rdf:langString ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:abstract moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+    sh:property    [ sh:path schema:author ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:author moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:creator ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:creator moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:publisher ; sh:nodeKind sh:IRI ; sh:class schema:Organization ;
+                     sh:severity sh:Violation ;
+                     sh:message "Book: schema:publisher moet een URI van een schema:Organization zijn."@nl ] ;
+    sh:property    [ sh:path schema:locationCreated ; sh:nodeKind sh:IRI ; sh:class schema:Place ;
+                     sh:severity sh:Violation ;
+                     sh:message "Book: schema:locationCreated moet een URI van een schema:Place zijn."@nl ] ;
+    sh:property    [ sh:path schema:spatialCoverage ; sh:nodeKind sh:IRI ; sh:class schema:Place ;
+                     sh:severity sh:Violation ;
+                     sh:message "Book: schema:spatialCoverage moet een URI van een schema:Place zijn."@nl ] ;
+    # een onderwerp is een term, persoon, organisatie, monument of een CHT-IRI (zonder eigen beschrijving in deze chunk)
+    sh:property    [ sh:path schema:about ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:about moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:position ; sh:datatype xsd:string ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Book: schema:position (deelnummer in de reeks) moet één tekstwaarde zijn."@nl ] ;
+    sh:property    [ sh:path schema:bookEdition ; sh:datatype rdf:langString ; sh:severity sh:Warning ;
+                     sh:message "Book: schema:bookEdition moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+.
+
+
+# ===========================================================================
+# schema:Article
+# ===========================================================================
+
+bib:ArticleMandatory
+    a              sh:NodeShape ;
+    sh:targetClass schema:Article ;
+    sh:name        "Article: verplichte eigenschappen"@nl ;
+    sh:description "Eigenschappen die voor elk artikel aanwezig moeten zijn."@nl ;
+    sh:property    [ sh:path schema:url ;              sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:url ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:sdDatePublished ;  sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:sdDatePublished ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:isPartOf ;         sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:isPartOf (de dataset) ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:identifier ;       sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:identifier (priref) ontbreekt."@nl ] ;
+.
+
+bib:ArticleRecommended
+    a              sh:NodeShape ;
+    sh:targetClass schema:Article ;
+    sh:name        "Article: aanbevolen eigenschappen"@nl ;
+    sh:description "Eigenschappen die voor elk artikel aanwezig horen te zijn; ontbreken levert een waarschuwing op."@nl ;
+    # de OAI-feed (oai_dc, set article) levert geen titel; zie de kop van dit bestand
+    sh:property    [ sh:path schema:name ;          sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Article: schema:name ontbreekt (de bron levert geen artikeltitel)."@nl ] ;
+    sh:property    [ sh:path schema:author ;        sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Article: schema:author ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Article: schema:datePublished ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:pageStart ;     sh:minCount 1 ; sh:severity sh:Warning ;
+                     sh:message "Article: schema:pageStart ontbreekt."@nl ] ;
+.
+
+# een artikel hoort bij een tijdschrift: naast de dataset ook een Periodical, PublicationVolume of PublicationIssue
+bib:ArticleContainer
+    a              sh:NodeShape ;
+    sh:targetClass schema:Article ;
+    sh:name        "Article: tijdschrift"@nl ;
+    sh:description "Een artikel hoort via schema:isPartOf bij een tijdschrift, jaargang of aflevering."@nl ;
+    sh:severity    sh:Warning ;
+    sh:message     "Article: geen tijdschrift gevonden (schema:isPartOf naar een Periodical, PublicationVolume of PublicationIssue)."@nl ;
+    sh:property    [ sh:path schema:isPartOf ;
+                     sh:qualifiedValueShape [ sh:or ( [ sh:class schema:Periodical ]
+                                                      [ sh:class schema:PublicationVolume ]
+                                                      [ sh:class schema:PublicationIssue ] ) ] ;
+                     sh:qualifiedMinCount 1 ;
+                     sh:severity sh:Warning ;
+                     sh:message "Article: geen tijdschrift gevonden (schema:isPartOf naar een Periodical, PublicationVolume of PublicationIssue)."@nl ] ;
+.
+
+bib:ArticleMaxCount
+    a              sh:NodeShape ;
+    sh:targetClass schema:Article ;
+    sh:name        "Article: maximum aantal waarden"@nl ;
+    sh:description "Eigenschappen die maximaal één waarde mogen hebben."@nl ;
+    sh:property    [ sh:path schema:url ;           sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:url mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:datePublished mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:sdDatePublished ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:sdDatePublished mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:pageStart ;     sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:pageStart mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:pageEnd ;       sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:pageEnd mag maximaal één waarde hebben."@nl ] ;
+.
+
+bib:ArticleType
+    a              sh:NodeShape ;
+    sh:targetClass schema:Article ;
+    sh:name        "Article: waardetype en formaat"@nl ;
+    sh:description "Eigenschappen waarvan de waarde van het juiste type of in het juiste formaat moet zijn."@nl ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:name moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+    sh:property    [ sh:path schema:url ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:url moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:url ;
+                     sh:pattern "^https://catalogus\\.cultureelerfgoed\\.nl/Details/fullCatalogue/\\d+$" ;
+                     sh:severity sh:Violation ;
+                     sh:message "Article: schema:url moet een link naar de openbare catalogus zijn."@nl ] ;
+    sh:property    [ sh:path schema:isPartOf ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:isPartOf moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:sdDatePublished ; sh:datatype xsd:date ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:sdDatePublished moet de vorm JJJJ-MM-DD (xsd:date) hebben."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:datatype xsd:gYear ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:datePublished moet een jaartal (xsd:gYear) zijn."@nl ] ;
+    sh:property    [ sh:path schema:description ; sh:datatype rdf:langString ; sh:severity sh:Warning ;
+                     sh:message "Article: schema:description moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+    sh:property    [ sh:path schema:author ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:author moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:creator ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:creator moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:about ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Article: schema:about moet een URI zijn."@nl ] ;
+    sh:property    [ sh:path schema:spatialCoverage ; sh:nodeKind sh:IRI ; sh:class schema:Place ;
+                     sh:severity sh:Violation ;
+                     sh:message "Article: schema:spatialCoverage moet een URI van een schema:Place zijn."@nl ] ;
+.
+
+
+# ===========================================================================
+# tijdschrift, jaargang, aflevering
+# ===========================================================================
+
+bib:PeriodicalShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:Periodical ;
+    sh:name        "Periodical: eigenschappen"@nl ;
+    sh:description "Een tijdschrift heeft een naam (tekst met taalcode)."@nl ;
+    sh:property    [ sh:path schema:name ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Periodical: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:uniqueLang true ; sh:severity sh:Violation ;
+                     sh:message "Periodical: schema:name moet tekst met taalcode zijn, maximaal één per taal."@nl ] ;
+    sh:property    [ sh:path schema:additionalType ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Periodical: schema:additionalType moet een URI zijn."@nl ] ;
+.
+
+bib:SeriesShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:CreativeWorkSeries ;
+    sh:name        "CreativeWorkSeries: eigenschappen"@nl ;
+    sh:description "Een reeks heeft een naam (tekst met taalcode, maximaal één per taal)."@nl ;
+    sh:property    [ sh:path schema:name ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "CreativeWorkSeries: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:uniqueLang true ; sh:severity sh:Violation ;
+                     sh:message "CreativeWorkSeries: schema:name moet tekst met taalcode zijn, maximaal één per taal."@nl ] ;
+.
+
+bib:MonumentShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:LandmarksOrHistoricalBuildings ;
+    sh:name        "LandmarksOrHistoricalBuildings: eigenschappen"@nl ;
+    sh:description "Een monument heeft een rijksmonumentnummer (PropertyValue) en eventueel een naam."@nl ;
+    sh:property    [ sh:path schema:identifier ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "LandmarksOrHistoricalBuildings: schema:identifier (rijksmonumentnummer) ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:uniqueLang true ; sh:severity sh:Violation ;
+                     sh:message "LandmarksOrHistoricalBuildings: schema:name moet tekst met taalcode zijn, maximaal één per taal."@nl ] ;
+.
+
+bib:PublicationVolumeShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:PublicationVolume ;
+    sh:name        "PublicationVolume: eigenschappen"@nl ;
+    sh:description "Een jaargang hoort bij een tijdschrift en heeft een volumenummer of een jaartal."@nl ;
+    sh:property    [ sh:path schema:isPartOf ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:class schema:Periodical ;
+                     sh:severity sh:Violation ;
+                     sh:message "PublicationVolume: schema:isPartOf moet verwijzen naar een schema:Periodical."@nl ] ;
+    sh:property    [ sh:path schema:volumeNumber ; sh:datatype xsd:string ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "PublicationVolume: schema:volumeNumber moet één tekstwaarde zijn."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:datatype xsd:gYear ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "PublicationVolume: schema:datePublished moet één jaartal (xsd:gYear) zijn."@nl ] ;
+    sh:or          ( [ sh:property [ sh:path schema:volumeNumber ; sh:minCount 1 ] ]
+                     [ sh:property [ sh:path schema:datePublished ; sh:minCount 1 ] ] ) ;
+    sh:message     "PublicationVolume: geen volumenummer en geen jaartal."@nl ;
+.
+
+bib:PublicationIssueShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:PublicationIssue ;
+    sh:name        "PublicationIssue: eigenschappen"@nl ;
+    sh:description "Een aflevering hoort bij een jaargang of tijdschrift en heeft een afleveringsnummer."@nl ;
+    sh:property    [ sh:path schema:isPartOf ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "PublicationIssue: schema:isPartOf ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:issueNumber ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                     sh:severity sh:Violation ;
+                     sh:message "PublicationIssue: schema:issueNumber moet precies één tekstwaarde zijn."@nl ] ;
+    sh:property    [ sh:path schema:datePublished ; sh:datatype xsd:gYear ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "PublicationIssue: schema:datePublished moet één jaartal (xsd:gYear) zijn."@nl ] ;
+.
+
+
+# ===========================================================================
+# personen, organisaties, plaatsen, termen, identifiers, dataset
+# ===========================================================================
+
+bib:PersonShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:Person ;
+    sh:name        "Person: eigenschappen"@nl ;
+    sh:description "Een persoon heeft precies één naam (tekst met taalcode)."@nl ;
+    sh:property    [ sh:path schema:name ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Person: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:maxCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Person: schema:name mag maximaal één waarde hebben."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:severity sh:Violation ;
+                     sh:message "Person: schema:name moet tekst met taalcode zijn (bv. \"...\"@nl)."@nl ] ;
+.
+
+bib:OrganizationShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:Organization ;
+    sh:name        "Organization: eigenschappen"@nl ;
+    sh:description "Een organisatie heeft een naam (tekst met taalcode, maximaal één per taal)."@nl ;
+    sh:property    [ sh:path schema:name ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Organization: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:uniqueLang true ; sh:severity sh:Violation ;
+                     sh:message "Organization: schema:name moet tekst met taalcode zijn, maximaal één per taal."@nl ] ;
+.
+
+bib:PlaceShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:Place ;
+    sh:name        "Place: eigenschappen"@nl ;
+    sh:description "Een plaats heeft één naam (tekst met taalcode)."@nl ;
+    sh:property    [ sh:path schema:name ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Place: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:uniqueLang true ; sh:severity sh:Violation ;
+                     sh:message "Place: schema:name moet tekst met taalcode zijn, maximaal één per taal."@nl ] ;
+.
+
+bib:DefinedTermShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:DefinedTerm ;
+    sh:name        "DefinedTerm: eigenschappen"@nl ;
+    sh:description "Een term heeft een naam (tekst met taalcode, maximaal één per taal)."@nl ;
+    sh:property    [ sh:path schema:name ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "DefinedTerm: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:name ; sh:datatype rdf:langString ; sh:uniqueLang true ; sh:severity sh:Violation ;
+                     sh:message "DefinedTerm: schema:name moet tekst met taalcode zijn, maximaal één per taal."@nl ] ;
+    sh:property    [ sh:path schema:sameAs ; sh:nodeKind sh:IRI ; sh:severity sh:Warning ;
+                     sh:message "DefinedTerm: schema:sameAs moet een URI zijn."@nl ] ;
+.
+
+bib:PropertyValueShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:PropertyValue ;
+    sh:name        "PropertyValue: eigenschappen"@nl ;
+    sh:description "Een identifier heeft precies één tekstwaarde en een soort (propertyID)."@nl ;
+    sh:property    [ sh:path schema:value ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                     sh:severity sh:Violation ;
+                     sh:message "PropertyValue: schema:value moet precies één tekstwaarde zonder taalcode zijn."@nl ] ;
+    sh:property    [ sh:path schema:propertyID ; sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "PropertyValue: schema:propertyID ontbreekt."@nl ] ;
+.
+
+bib:DatasetShape
+    a              sh:NodeShape ;
+    sh:targetClass schema:Dataset ;
+    sh:name        "Dataset: eigenschappen"@nl ;
+    sh:description "De dataset heeft een naam en een uitgever."@nl ;
+    sh:property    [ sh:path schema:name ;      sh:minCount 1 ; sh:severity sh:Violation ;
+                     sh:message "Dataset: schema:name ontbreekt."@nl ] ;
+    sh:property    [ sh:path schema:publisher ; sh:minCount 1 ; sh:nodeKind sh:IRI ; sh:severity sh:Violation ;
+                     sh:message "Dataset: schema:publisher ontbreekt of is geen URI."@nl ] ;
+.

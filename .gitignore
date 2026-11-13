@@ -1,0 +1,15 @@
+# uitvoer van een run
+data/
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# lokale geheimen en editors
+.env
+.vscode/
+.idea/
+.triplydb-js.err

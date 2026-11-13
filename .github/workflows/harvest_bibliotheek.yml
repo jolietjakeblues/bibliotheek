@@ -1,0 +1,136 @@
+name: 'RCE Bibliotheek ETL: harvest + transform + validate + publish'
+
+# Elke maandag 03:00 UTC (= 04:00/05:00 Nederlandse tijd). Handmatig starten kan ook.
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      chunks:
+        description: 'Aantal records per JSON-LD-bestand.'
+        required: true
+        type: number
+        default: 7000
+      testmode:
+        description: 'Testmodus: oogst alleen 100 records per bron en publiceer NIET.'
+        required: true
+        type: boolean
+        default: false
+      publish:
+        description: 'Publiceer naar de Linked Data Voorziening (alleen zonder testmodus).'
+        required: true
+        type: boolean
+        default: true
+
+env:
+  CACHE_PATH: 'data/'
+  TRIPLY_ACCOUNT: 'rce'
+  TRIPLY_DATASET: 'bibliotheek'
+  TRIPLY_URL: 'https://api.linkeddata.cultureelerfgoed.nl'
+  # vaste graphnamen per bron: een nieuwe run vervangt de graph van de vorige run (geen ophoping)
+  GRAPH_BASE: 'https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/graphs'
+
+# nooit twee runs tegelijk: de tweede zou halverwege de graph van de eerste overschrijven
+concurrency:
+  group: bibliotheek-etl
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Functionele tests en SHACL-tests
+        run: python -m pytest
+
+  # De bronnen draaien parallel. Geschat uit een steekproef van 15.000 boeken: de boeken een tot twee uur (selectie uit de
+  # OAI, 217.000 API-records, validatie), de artikelen ongeveer een half uur. De time-out laat ruim marge voor een trage bron.
+  harvest:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: true
+      matrix:
+        source: [books, article]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Oogst en transformeer
+        run: |
+          mkdir -p "${CACHE_PATH}"
+          if [ "${{ inputs.testmode }}" = "true" ]; then EXTRA="--max-records 100"; else EXTRA=""; fi
+          python src/harvest_service.py --source ${{ matrix.source }} --chunks ${{ inputs.chunks || 7000 }} $EXTRA
+      - name: Valideer tegen SHACL (faalt bij een Violation, dan wordt er niets gepubliceerd)
+        run: python src/validate_service.py ${CACHE_PATH}${{ matrix.source }}-*.jsonld
+      - name: Samenvatting
+        if: always()
+        run: |
+          echo "### ${{ matrix.source }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "${CACHE_PATH}manifest-${{ matrix.source }}.json" >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bibliotheek-${{ matrix.source }}
+          path: ${{ env.CACHE_PATH }}
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    needs: harvest
+    if: ${{ !inputs.testmode && (inputs.publish || github.event_name == 'schedule') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bibliotheek-*
+          path: artifacts
+      - name: TriplyDB CLI ophalen
+        run: |
+          wget -q 'https://static.triply.cc/cli/triplydb-linux'
+          chmod +x triplydb-linux
+      - name: Publiceer per bron naar een vaste graph
+        env:
+          LDV_API_TOKEN: ${{ secrets.LDV_API_TOKEN }}
+        run: |
+          set -e
+          for dir in artifacts/bibliotheek-*; do
+            source=$(basename "$dir" | sed 's/^bibliotheek-//')
+            graph="${GRAPH_BASE}/${source}"
+            # eerste bestand vervangt de graph van de vorige run, de rest wordt eraan toegevoegd
+            mode=overwrite
+            for file in $(ls "$dir"/${source}-*.jsonld | sort); do
+              echo "Importeer $file in $graph (mode: $mode)"
+              ./triplydb-linux import-from-file \
+                --dataset "${TRIPLY_DATASET}" --account "${TRIPLY_ACCOUNT}" --url "${TRIPLY_URL}" \
+                --token "${LDV_API_TOKEN}" \
+                --default-graph-name "${graph}" --mode "${mode}" "$file"
+              mode=merge
+            done
+          done
+      - name: Toon Triply-foutmelding
+        if: ${{ failure() }}
+        run: cat .triplydb-js.err || true
+
+  sync:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Synchroniseer de SPARQL-service
+        env:
+          LDV_API_TOKEN: ${{ secrets.LDV_API_TOKEN }}
+        run: |
+          curl --fail-with-body -sS -X POST \
+            -H "Authorization: Bearer ${LDV_API_TOKEN}" -H 'Content-Type: application/json' \
+            "${TRIPLY_URL}/datasets/${TRIPLY_ACCOUNT}/${TRIPLY_DATASET}/services/${TRIPLY_DATASET}" \
+            -d '{"sync": "true"}'
