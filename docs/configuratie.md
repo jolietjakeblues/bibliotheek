@@ -29,6 +29,8 @@ elke sleutel in het bestand hier voorkomt.
 |---|---|---|
 | `SRC_URI` | `https://rce.adlibhosting.com/oaiapi/oai.ashx` | adres van de OAI |
 | `SRC_SLEEP` | `0.05` | pauze in seconden tussen OAI-pagina's (10 records per pagina) |
+| `SRC_OAI_WORKERS` | `3` | tijdvakken die tegelijk uit de OAI worden opgehaald (zie [architectuur.md](architectuur.md)). `1` haalt één lijst achter elkaar op. Een beperkte run (`--max-records`) doet dat altijd. |
+| `SRC_OAI_WINDOW` | `10000` | grootste aantal records per tijdvak. Kleinere tijdvakken verdelen het werk gelijkmatiger, maar kosten meer tellingen vooraf. |
 | `SRC_RETRIES` | `5` | pogingen per verzoek, voor OAI en API; ook het aantal pogingen bij een tijdelijke serverfout van het API |
 | `SRC_BACKOFF` | `2.0` | basiswachttijd in seconden tussen pogingen (wordt per poging vermenigvuldigd) |
 
@@ -54,6 +56,7 @@ is dus veilig aan te passen.
 |---|---|---|
 | `MAX_RECORD_ERRORS` | `0` | aantal records dat bij de transformatie mag falen voordat de run mislukt |
 | `MAX_MISSING_IN_API` | `0` | aantal records dat de OAI publiceert maar het API niet kent, voordat de run mislukt |
+| `MAX_UNREADABLE_IN_API` | `10` | aantal te publiceren records dat het API zelf niet kan uitleveren omdat het record in de bron fout staat (zie [beheer.md](beheer.md)); zulke records worden overgeslagen en met priref in het manifest genoemd. `0` laat de run bij het eerste kapotte record falen. |
 
 ## Organisatie
 

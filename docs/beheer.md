@@ -26,11 +26,13 @@ Aanbevolen volgorde voor een nieuwe of gewijzigde pijplijn:
 | Stap | `testmode` | `publish` | Wat het bewijst | Duur (geschat) |
 |---|---|---|---|---|
 | 1. Testrun | aan | n.v.t. | de omgeving werkt, de tests slagen, de bronnen zijn bereikbaar | enkele minuten |
-| 2. Volledige run zonder publicatie | uit | uit | alle controles op volledigheid slagen; de uitvoer staat 7 dagen als artifact | 1 tot 2 uur |
-| 3. Publiceren | uit | aan | de data staat in Triply | 1 tot 2 uur plus import |
+| 2. Volledige run zonder publicatie | uit | uit | alle controles op volledigheid slagen; de uitvoer staat 7 dagen als artifact | nog niet gemeten met tijdvakken |
+| 3. Publiceren | uit | aan | de data staat in Triply | idem, plus import |
 
-> De duur is geschat uit steekproeven (15.000 boeken, 300 artikelen). Een volledige run is nog niet gedraaid. Noteer de werkelijke
-> duur na de eerste volledige run hier.
+> Gemeten: de eerste volledige run haalde de boekenselectie uit de OAI achter elkaar op en deed er 3 uur 12 minuten over, daarna
+> viel hij om op een kapot record (zie [architectuur.md](architectuur.md)). Lokaal kostten de API-records van de boeken (217.000)
+> ongeveer 26 minuten en de artikelen (OAI plus API) ongeveer 23 minuten. Sindsdien wordt de OAI in tijdvakken opgehaald; noteer
+> hier de werkelijke duur na de eerstvolgende volledige run.
 
 Een testrun slaat de volledigheidscontrole bewust over (er is immers maar een deel opgehaald). De echte controle zie je bij stap 2.
 
@@ -60,11 +62,11 @@ Elke `harvest`-job schrijft een samenvatting (*Summary* bovenaan de run) met het
 
 ```json
 {
-  "oai_seen": 182398, "oai_expected": 182398,
-  "api_seen": 216902, "api_hits": 216902, "api_duplicates": 0,
+  "oai_seen": 182398, "oai_expected": 182398, "oai_windows": 40,
+  "api_seen": 216901, "api_hits": 216902, "api_duplicates": 0, "api_unreadable": 1, "unreadable_in_scope": 1,
   "intended": 182398, "written": 182398, "files": 27,
   "errors": 0, "skipped": 0, "skipped_reasons": {},
-  "out_of_scope": 34504, "missing_in_api": 0,
+  "out_of_scope": 34504, "missing_in_api": 0, "unreadable_ids": ["450004680"],
   "complete": true
 }
 ```
@@ -74,7 +76,9 @@ Elke `harvest`-job schrijft een samenvatting (*Summary* bovenaan de run) met het
 | Sleutel | Betekenis |
 |---|---|
 | `oai_seen` / `oai_expected` | records uit de OAI die we kregen / die de OAI aankondigde (`completeListSize`). Moeten gelijk zijn. |
-| `api_seen` / `api_hits` | records uit het API die we kregen / die het API aankondigde. Moeten gelijk zijn. |
+| `oai_windows` | aantal tijdvakken waarin de OAI-lijst is opgehaald (leeg bij een beperkte run) |
+| `api_seen` / `api_hits` | records uit het API die we kregen / die het API aankondigde. Samen met `api_unreadable` moeten ze gelijk zijn aan `api_hits`. |
+| `api_unreadable`, `unreadable_in_scope`, `unreadable_ids` | records die het API zelf niet kon uitleveren (kapot in de bron), hoeveel daarvan gepubliceerd hadden moeten worden, en welke. |
 | `api_duplicates` | records die het API dubbel leverde. Moet `0` zijn. |
 | `intended` | records die we wilden schrijven (de selectie) |
 | `written` | records die in een bestand staan |
@@ -98,6 +102,9 @@ Warnings (bijvoorbeeld "Book: schema:author ontbreekt") zijn bekende hiaten in d
 | `ONVOLLEDIG (OAI): bron kondigt N records aan, M opgehaald.` | OAI-pagina's gemist, of de bron veranderde tijdens de run | start opnieuw; blijft het gebeuren, onderzoek dan de bron |
 | `ONVOLLEDIG (API): ... (K dubbel geleverd)` | paginering van het API klopt niet | zie `adlib_client.py` (`startfrom` telt vanaf 1); meld het als dit na een wijziging gebeurt |
 | `Record N is dubbel geleverd door het API` | idem | idem |
+| `Record N is onleesbaar in het API en wordt overgeslagen: Invalid integer value ...` | het record staat in de bron fout (bijvoorbeeld tekst in een getalveld) | niets aan de pijplijn; geef het priref door aan de beheerder van de catalogus. Het record wordt niet gepubliceerd. |
+| `N te publiceren records waren in het API onleesbaar (toegestaan: 10): ...` | meer kapotte records dan `MAX_UNREADABLE_IN_API` | lees `unreadable_ids`, laat de records herstellen; verhoog de grens alleen bewust |
+| `Tijdvak ...: N records opgehaald, M verwacht` of `De tijdvakken bevatten samen ...` | de OAI veranderde tijdens het plannen of de run (een record kreeg een nieuwe datestamp) | start de run opnieuw; blijft het gebeuren, zet `SRC_OAI_WORKERS` op 1 |
 | `N records staan in de OAI maar niet in het API (toegestaan: 0): ...` | records buiten `api_search`, of echt niet in het API | zie `missing_ids` in het manifest en de uitleg hieronder |
 | `N records konden niet getransformeerd worden` | een record geeft een fout in de mapping | zoek in de log naar `Fout bij transformatie van <id>`; bekijk dat record |
 | `Rekenfout: weggeschreven (..) + fouten (..) + niet in API (..) != beoogd (..)` | een bug in de boekhouding | meld het; publiceer niet |

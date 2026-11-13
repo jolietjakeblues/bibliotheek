@@ -53,7 +53,7 @@ def _setup(monkeypatch, tmp_path, source, ids, oai_announced=None, api_ids=None,
     """Zet nepbronnen en een tijdelijke config neer. `ids` = wat de OAI-set bevat, `api_ids` = wat het API kent."""
     with open(ROOT / 'config' / 'config.yml', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
-    cfg.update({'SRC_API_LIMIT': 10, 'SRC_API_WORKERS': 2, 'SRC_SLEEP': 0, **config_overrides})
+    cfg.update({'SRC_API_LIMIT': 10, 'SRC_API_WORKERS': 2, 'SRC_SLEEP': 0, 'SRC_OAI_WORKERS': 1, **config_overrides})
     cfg['SOURCES'][source].setdefault('scope', 'oai')
     cfg_path = tmp_path / 'config.yml'
     cfg_path.write_text(yaml.safe_dump(cfg), encoding='utf-8')
@@ -129,6 +129,71 @@ def test_missing_in_api_can_be_allowed(monkeypatch, tmp_path):
     _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), api_ids=[i for i in range(1, 26) if i != 7],
            MAX_MISSING_IN_API=1)
     assert run('books') == 0 and manifest(tmp_path, 'books')['written'] == 24
+
+
+def _unreadable(monkeypatch, bad):
+    """Laat het API-record(s) `bad` niet leveren, zoals de echte server bij priref 450004680 (daarna splitst de client de pagina)."""
+    fake = adlib_client.fetch_page
+
+    def picky(base, database, search, start, limit, retries=5, backoff=2.0):
+        page = fake(base, database, search, start, limit, retries, backoff)
+        hit = [r.get('priref') for r in page.findall('.//record') if int(r.get('priref')) in bad]
+        if hit:
+            raise adlib_client.AdlibError(f"Invalid integer value '76, 85' for Field 't3', record number {hit[0]}")
+        return page
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', picky)
+
+
+def test_unreadable_book_is_named_skipped_and_fails_the_run_by_default(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), MAX_UNREADABLE_IN_API=0)
+    _unreadable(monkeypatch, {7})
+    assert run('books') == 1
+    m = manifest(tmp_path, 'books')
+    assert m['unreadable_ids'] == ['7'] and m['unreadable_in_scope'] == 1 and m['api_unreadable'] == 1
+    assert m['missing_in_api'] == 0 and m['written'] == 24 and m['api_seen'] == 24 and m['api_hits'] == 25
+
+
+def test_unreadable_book_within_the_allowance_passes_and_is_not_published(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), MAX_UNREADABLE_IN_API=1)
+    _unreadable(monkeypatch, {7})
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['complete'] is True and m['written'] == 24 and m['unreadable_ids'] == ['7']
+    data = ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('books-*.jsonld'))
+    assert 'Titel 7"' not in data and 'Titel 8' in data
+
+
+def test_unreadable_book_with_scope_api_balances(monkeypatch, tmp_path):
+    # gevonden in een droge run op het echte API: bij scope 'api' telde het onleesbare record niet mee in 'beoogd'
+    _setup(monkeypatch, tmp_path, 'books', ids=[], api_ids=range(1, 16), scope='api', MAX_UNREADABLE_IN_API=1)
+    cfg = yaml.safe_load((tmp_path / 'config.yml').read_text())
+    cfg['SOURCES']['books']['scope'] = 'api'
+    (tmp_path / 'config.yml').write_text(yaml.safe_dump(cfg))
+    _unreadable(monkeypatch, {7})
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['written'] == 14 and m['intended'] == 15 and m['unreadable_ids'] == ['7']
+
+
+def test_unreadable_record_outside_the_selection_is_harmless(monkeypatch, tmp_path):
+    # het API heeft 30 records, de OAI publiceert er 25; record 28 is kapot maar wordt toch niet gepubliceerd
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), api_ids=range(1, 31), MAX_UNREADABLE_IN_API=0)
+    _unreadable(monkeypatch, {28})
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['api_unreadable'] == 1 and m['unreadable_in_scope'] == 0 and m['written'] == 25
+
+
+def test_unreadable_without_record_in_the_error_is_not_swallowed(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26))
+
+    def broken(base, database, search, start, limit, retries=5, backoff=2.0):
+        raise adlib_client.AdlibError('Er ging iets mis')
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', broken)
+    with pytest.raises(adlib_client.AdlibError):
+        run('books')
 
 
 def test_deleted_in_oai_are_not_published(monkeypatch, tmp_path):
@@ -208,6 +273,36 @@ def test_article_missing_in_api_can_be_allowed(monkeypatch, tmp_path):
     assert 'Titel 200000004' not in data and 'Titel 200000003' in data
 
 
+def test_unreadable_article_is_still_written_from_the_oai(monkeypatch, tmp_path):
+    ids = list(range(200000001, 200000011))
+    _setup(monkeypatch, tmp_path, 'article', ids=ids, MAX_UNREADABLE_IN_API=1)
+    _unreadable(monkeypatch, {200000004})
+    assert run('article') == 0
+    m = manifest(tmp_path, 'article')
+    assert m['unreadable_ids'] == ['200000004'] and m['missing_in_api'] == 0 and m['written'] == 10
+    data = ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('article-*.jsonld'))
+    assert 'Titel 200000004' not in data and 'Tijdschrift' in data       # geen titel, wel het tijdschriftgegeven uit de OAI
+
+
 def test_unknown_source_is_an_error(monkeypatch, tmp_path):
     monkeypatch.setenv('CACHE_PATH', str(tmp_path))
     assert harvest_service.main(['--source', 'bestaat-niet']) == 2
+
+
+def test_books_harvested_in_parallel_windows_are_complete(monkeypatch, tmp_path):
+    from conftest import FakeOai
+    import datetime
+    ids = list(range(1, 26))
+    _setup(monkeypatch, tmp_path, 'books', ids=ids, SRC_OAI_WORKERS=3, SRC_OAI_WINDOW=6)
+    fake = FakeOai({i: datetime.datetime(2026, 3, 1, 12, 0, 0) + datetime.timedelta(seconds=0.5 * i) for i in ids})
+    monkeypatch.setattr(oai_client, 'fetch_and_parse', fake.fetch)
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['complete'] is True and m['written'] == 25 and m['oai_seen'] == m['oai_expected'] == 25
+    assert m['oai_windows'] > 1
+
+
+def test_limited_run_does_not_use_windows(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), SRC_OAI_WORKERS=3)
+    assert run('books', '--max-records', '7') == 0
+    assert manifest(tmp_path, 'books')['oai_windows'] is None

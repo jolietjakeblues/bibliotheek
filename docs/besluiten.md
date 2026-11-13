@@ -47,4 +47,6 @@ Twee lijsten: wat nog besloten of uitgezocht moet worden, en welke keuzes zijn g
 | **Records die falen laten geen halve triples achter** | een record wordt eerst apart opgebouwd. |
 | **Warnings blokkeren niet, Violations wel** | bekende hiaten in de bron (een boek zonder auteur) mogen publicatie niet tegenhouden. |
 | **`startfrom` begint bij 1 en dubbelen laten de run falen** | het API laat anders pagina's overlappen (gevonden in een live steekproef). |
+| **Een record dat het API niet kan leveren wordt overgeslagen, tot 10 stuks** | één kapot bronrecord (priref 450004680) liet de eerste volledige run na 3 uur omvallen. Elk overgeslagen record staat met priref in het manifest; `MAX_UNREADABLE_IN_API` is `0` te zetten voor een strenge run. |
+| **OAI-selectie in tijdvakken parallel** | de selectie duurde achter elkaar 3u12m. Tijdvakken overlappen op de grens (anders gaan records met fracties van een seconde verloren) en elk tijdvak en het totaal worden gecontroleerd. |
 | **Tijdelijke serverfouten opnieuw proberen, syntaxisfouten niet** | de Adlib-server gaf in een GitHub Action eenmalig een interne fout. |

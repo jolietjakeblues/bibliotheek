@@ -30,7 +30,7 @@ def run(monkeypatch, total, limit=10, workers=3, **kwargs):
 def test_all_pages_in_order_even_when_fetched_in_parallel(monkeypatch):
     out, state, calls = run(monkeypatch, total=95)
     assert out == [str(i) for i in range(1, 96)]
-    assert state == {'seen': 95, 'hits': 95, 'duplicates': 0}
+    assert state == {'seen': 95, 'hits': 95, 'duplicates': 0, 'unreadable': []}
     assert sorted(calls) == list(range(1, 96, 10))            # 1, 11, 21, ... zonder overlap
 
 
@@ -102,6 +102,81 @@ def test_broken_xml_is_retried_then_raised(monkeypatch):
     monkeypatch.setattr(time, 'sleep', lambda s: None)
     with pytest.raises(ET.ParseError):
         adlib_client.fetch_page('http://x', 'books', 'all', 0, 10, retries=4)
+
+
+BAD = "Invalid integer value '76, 85' for Field 't3' in database 'document', record number {}"
+
+
+def broken_api(monkeypatch, total, bad, calls=None):
+    """Een API waarvan elke pagina die een record uit `bad` bevat faalt, zoals het echte API bij priref 450004680."""
+    def fake(base, database, search, start, limit_, retries=5, backoff=2.0):
+        if calls is not None:
+            calls.append((start, limit_))
+        offset = start - 1
+        ids = list(range(offset + 1, min(offset + limit_, total) + 1))
+        hit = [i for i in ids if i in bad]
+        if hit:
+            raise adlib_client.AdlibError(BAD.format(hit[0]))
+        return page(offset, len(ids), total)
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', fake)
+
+
+def test_unreadable_record_is_isolated_and_the_rest_of_the_page_is_kept(monkeypatch):
+    broken_api(monkeypatch, total=95, bad={37})
+    state = {}
+    out = [r.get('priref') for r in adlib_client.iter_records('http://x', 'books', 'all', state, limit=10, workers=2)]
+    assert out == [str(i) for i in range(1, 96) if i != 37]
+    assert state['unreadable'] == ['37'] and state['seen'] == 94 and state['hits'] == 95
+
+
+def test_isolation_needs_few_requests(monkeypatch):
+    calls = []
+    broken_api(monkeypatch, total=500, bad={250}, calls=calls)
+    state = {}
+    list(adlib_client.iter_records('http://x', 'books', 'all', state, limit=500, workers=1))
+    assert state['unreadable'] == ['250'] and state['seen'] == 499
+    assert len(calls) < 30                                       # 500 -> 1 door steeds te halveren, niet record voor record
+
+
+def test_several_unreadable_records_and_unreadable_first_and_last(monkeypatch):
+    broken_api(monkeypatch, total=40, bad={1, 20, 40})
+    state = {}
+    out = [r.get('priref') for r in adlib_client.iter_records('http://x', 'books', 'all', state, limit=10, workers=2)]
+    assert out == [str(i) for i in range(1, 41) if i not in (1, 20, 40)]
+    assert sorted(state['unreadable'], key=int) == ['1', '20', '40'] and state['hits'] == 40
+
+
+def test_unreadable_record_on_a_short_last_page(monkeypatch):
+    broken_api(monkeypatch, total=23, bad={22})
+    state = {}
+    out = [r.get('priref') for r in adlib_client.iter_records('http://x', 'books', 'all', state, limit=10, workers=1)]
+    assert out == [str(i) for i in range(1, 24) if i != 22] and state['unreadable'] == ['22']
+
+
+def test_error_without_a_record_is_still_raised(monkeypatch):
+    def fake(base, database, search, start, limit_, retries=5, backoff=2.0):
+        raise adlib_client.AdlibError('An item with the same key has already been added.')
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', fake)
+    with pytest.raises(adlib_client.AdlibError, match='same key'):
+        list(adlib_client.iter_records('http://x', 'books', 'all', {}, limit=10))
+
+
+def test_single_record_result_that_is_unreadable_gives_hits_but_no_records(monkeypatch):
+    broken_api(monkeypatch, total=1, bad={1})
+    state = {}
+    assert list(adlib_client.iter_records('http://x', 'books', 'all', state, limit=10)) == []
+    assert state['hits'] == 1 and state['unreadable'] == ['1'] and state['seen'] == 0
+
+
+def test_when_every_request_fails_the_run_stops(monkeypatch):
+    def always(base, database, search, start, limit_, retries=5, backoff=2.0):
+        raise adlib_client.AdlibError(BAD.format(1))
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', always)
+    with pytest.raises(adlib_client.AdlibError, match='Geen enkel record'):
+        list(adlib_client.iter_records('http://x', 'books', 'all', {}, limit=10))
 
 
 def test_text_helpers_skip_empty_and_duplicates():

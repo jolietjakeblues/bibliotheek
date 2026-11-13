@@ -17,6 +17,15 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
 - Documentatie in `docs/` en `README.md`; echte voorbeelden in `docs/voorbeelden/` (gegenereerd en door een test bewaakt);
   voorbeeld-SPARQL-query's die op de testrecords worden uitgevoerd.
 
+### Eerste volledige run (mislukt) en wat eruit volgde
+- De run viel na 3u26m om op één record in het API (priref 450004680, tekst `76, 85` in een getalveld). Het API weigert dan de hele
+  pagina. Nu wordt zo'n pagina gesplitst tot het ene record overblijft; dat wordt overgeslagen en met priref in het manifest
+  genoemd (`MAX_UNREADABLE_IN_API`, nu 10). Een droge run op het hele API liet zien dat er voor de boeken en artikelen verder geen
+  kapotte records en geen transformatiefouten zijn.
+- De boekenselectie uit de OAI duurde 3u12m. De OAI-lijst wordt nu in tijdvakken (`from`/`until`) parallel opgehaald
+  (`SRC_OAI_WORKERS`, `SRC_OAI_WINDOW`), met controle op elk tijdvak en op het totaal. Datestamps hebben fracties van een seconde:
+  zonder overlap tussen tijdvakken gingen records verloren.
+
 ### Gevonden tijdens de bouw
 - `startfrom` van het API telt vanaf 1; stappen van 0, 500, 1000 lieten pagina's één record overlappen en leverden een record dubbel.
 - Het API stuurt gzip-gecomprimeerde antwoorden; zonder uitpakken gaf elke pagina een parsefout.

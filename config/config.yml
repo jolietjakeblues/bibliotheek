@@ -23,6 +23,10 @@ SRC_API_WORKERS: 3
 SRC_URI: 'https://rce.adlibhosting.com/oaiapi/oai.ashx'
 # pauze tussen OAI-pagina's (seconden); de bron levert 10 records per pagina
 SRC_SLEEP: 0.05
+# De OAI-lijst wordt in tijdvakken (op datestamp) verdeeld die tegelijk worden opgehaald; zonder dit duurde een boekenlijst
+# van 182.000 records ruim drie uur. 1 = één lijst achter elkaar. SRC_OAI_WINDOW = maximaal aantal records per tijdvak.
+SRC_OAI_WORKERS: 3
+SRC_OAI_WINDOW: 10000
 SRC_RETRIES: 5
 SRC_BACKOFF: 2.0
 
@@ -51,6 +55,9 @@ SOURCES:
 MAX_RECORD_ERRORS: 0
 # aantal records dat de OAI publiceert maar dat in het API niet (meer) gevonden wordt (0 = geen enkel)
 MAX_MISSING_IN_API: 0
+# aantal te publiceren records dat het API zelf niet kan uitleveren omdat het record in de bron fout staat (bijvoorbeeld
+# een tekst in een getalveld). Ze worden overgeslagen en met priref in het manifest genoemd; meld ze bij de beheerder.
+MAX_UNREADABLE_IN_API: 10
 
 ### Organisatie ###
 ORG_URI: 'https://www.cultureelerfgoed.nl/'

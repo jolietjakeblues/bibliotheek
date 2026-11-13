@@ -13,6 +13,7 @@ Controles (de run faalt, zodat er niets gepubliceerd wordt):
   - OAI: opgehaald == completeListSize; API: opgehaald == diagnostic/hits;
   - weggeschreven + fouten == wat we wilden schrijven (niets raakt stilzwijgend kwijt);
   - records die de OAI publiceert maar het API niet kent blijven binnen MAX_MISSING_IN_API;
+  - records die het API zelf niet kan uitleveren (kapot in de bron) blijven binnen MAX_UNREADABLE_IN_API en staan in het manifest;
   - het aantal transformatiefouten blijft binnen MAX_RECORD_ERRORS.
 """
 import argparse
@@ -79,9 +80,10 @@ class ChunkWriter:
 
 
 def new_state() -> dict:
-    return {'oai_seen': 0, 'oai_expected': None, 'api_seen': 0, 'api_hits': None, 'skipped': 0, 'skipped_reasons': {},
+    return {'oai_seen': 0, 'oai_expected': None, 'oai_windows': None, 'api_seen': 0, 'api_hits': None, 'skipped': 0, 'skipped_reasons': {},
             'errors': 0, 'error_ids': [], 'api_duplicates': 0, 'written': 0, 'files': 0, 'out_of_scope': 0, 'missing_in_api': 0,
-            'missing_ids': [], 'intended': 0, 'limited': False}
+            'missing_ids': [], 'intended': 0, 'limited': False, 'api_unreadable': 0, 'unreadable_ids': [],
+            'unreadable_in_scope': 0}
 
 
 def _skip(state: dict, reason: str):
@@ -94,11 +96,38 @@ def _oai_args(config: dict, source: dict, max_records):
                 backoff=float(config.get('SRC_BACKOFF', 2.0)), max_records=max_records)
 
 
+def _oai_iter(config: dict, source: dict, state: dict, verb: str, max_records):
+    """OAI-records of -headers van de bron. Een volledige run haalt de lijst in tijdvakken parallel op (SRC_OAI_WORKERS);
+    een beperkte run (--max-records) of SRC_OAI_WORKERS=1 loopt de lijst achter elkaar af."""
+    args = _oai_args(config, source, max_records)
+    oai = source['oai']
+    workers = int(config.get('SRC_OAI_WORKERS', 1))
+    if workers > 1 and max_records is None:
+        return oai_client.iter_windowed(config['SRC_URI'], oai['set'], oai['prefix'], state, verb=verb, workers=workers,
+                                        max_window=int(config.get('SRC_OAI_WINDOW', 10000)), **{
+                                            k: args[k] for k in ('sleep_between', 'retries', 'backoff')})
+    iterate = oai_client.iter_headers if verb == 'ListIdentifiers' else oai_client.iter_records
+    return iterate(config['SRC_URI'], oai['set'], oai['prefix'], state, **args)
+
+
 def _api_iter(config: dict, source: dict, api_state: dict, cap):
     return adlib_client.iter_records(
         config['SRC_API'], config.get('SRC_API_DATABASE', 'books'), source['api_search'], api_state,
         limit=int(config.get('SRC_API_LIMIT', 500)), workers=int(config.get('SRC_API_WORKERS', 3)),
         retries=int(config.get('SRC_RETRIES', 5)), backoff=float(config.get('SRC_BACKOFF', 2.0)), max_records=cap)
+
+
+def _count_api(state: dict, api_state: dict, scope):
+    """Neem de tellers van het API over. `scope` is de set priref's die we publiceren (None: alles wat het API levert)."""
+    state['api_seen'], state['api_hits'] = api_state['seen'], api_state.get('hits')
+    state['api_duplicates'] = api_state.get('duplicates', 0)
+    unreadable = api_state.get('unreadable', [])
+    state['api_unreadable'] = len(unreadable)
+    state['unreadable_ids'] = unreadable[:200]
+    state['unreadable_in_scope'] = sum(1 for p in unreadable if scope is None or p in scope)
+    if unreadable:
+        logger.warning('%d records waren in het API onleesbaar en zijn overgeslagen (%d in de selectie): %s',
+                       len(unreadable), state['unreadable_in_scope'], ', '.join(unreadable[:20]))
 
 
 def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, max_records=None):
@@ -107,13 +136,13 @@ def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, 
         oai_state = {}
         scope = set()
         logger.info('Selectie ophalen: OAI set=%s (alleen de identifiers)', source['oai']['set'])
-        for header in oai_client.iter_headers(config['SRC_URI'], source['oai']['set'], source['oai']['prefix'],
-                                              oai_state, **_oai_args(config, source, max_records)):
+        for header in _oai_iter(config, source, oai_state, 'ListIdentifiers', max_records):
             if header['deleted']:
                 _skip(state, 'deleted')
             else:
                 scope.add(transform_service.record_priref(header['identifier']))
         state['oai_seen'], state['oai_expected'] = oai_state['seen'], oai_state.get('complete_list_size')
+        state['oai_windows'] = oai_state.get('windows')
         state['intended'] = len(scope)
         logger.info('Selectie: %d records', len(scope))
 
@@ -132,10 +161,12 @@ def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, 
         writer.add(transform_service.transform_book, record, source)
         if api_state['seen'] % 5000 == 0:
             logger.info('books: %d/%s API-records verwerkt', api_state['seen'], api_state.get('hits'))
-    state['api_seen'], state['api_hits'] = api_state['seen'], api_state.get('hits')
-    state['api_duplicates'] = api_state.get('duplicates', 0)
+    _count_api(state, api_state, scope)
+    if scope is None:
+        state['intended'] += state['unreadable_in_scope']      # beoogd telt hier de records die we zagen; ook het onleesbare hoort erbij
     if scope is not None:
-        missing = sorted(scope - found, key=int)
+        # een record dat het API niet kon uitleveren, telt apart (unreadable) en niet als 'ontbreekt in het API'
+        missing = sorted(scope - found - set(api_state.get('unreadable', [])), key=int)
         state['missing_in_api'] = len(missing)
         state['missing_ids'] = missing[:200]
 
@@ -144,8 +175,7 @@ def harvest_articles(config: dict, source: dict, writer: ChunkWriter, state: dic
     oai_state = {}
     oai_records = {}
     logger.info('OAI ophalen: set=%s prefix=%s', source['oai']['set'], source['oai']['prefix'])
-    for header, element in oai_client.iter_records(config['SRC_URI'], source['oai']['set'], source['oai']['prefix'],
-                                                   oai_state, **_oai_args(config, source, max_records)):
+    for header, element in _oai_iter(config, source, oai_state, 'ListRecords', max_records):
         if header['deleted']:
             _skip(state, 'deleted')
         elif element is None:
@@ -156,6 +186,7 @@ def harvest_articles(config: dict, source: dict, writer: ChunkWriter, state: dic
             oai_records[transform_service.record_priref(header['identifier'])] = (
                 header, transform_service.collect_fields(element))
     state['oai_seen'], state['oai_expected'] = oai_state['seen'], oai_state.get('complete_list_size')
+    state['oai_windows'] = oai_state.get('windows')
     state['intended'] = len(oai_records)
     logger.info('OAI: %d artikelen', len(oai_records))
 
@@ -172,13 +203,15 @@ def harvest_articles(config: dict, source: dict, writer: ChunkWriter, state: dic
         writer.add(transform_service.transform_article, header, fields, source, record)
         if api_state['seen'] % 5000 == 0:
             logger.info('article: %d/%s API-records verwerkt', api_state['seen'], api_state.get('hits'))
-    state['api_seen'], state['api_hits'] = api_state['seen'], api_state.get('hits')
-    state['api_duplicates'] = api_state.get('duplicates', 0)
+    _count_api(state, api_state, set(oai_records))
 
-    # OAI-artikelen die het API niet kent: wel schrijven (tijdschriftgegevens), maar tellen en bewaken
+    # OAI-artikelen zonder API-record: wel schrijven (tijdschriftgegevens), maar tellen en bewaken. Een artikel dat het
+    # API niet kon uitleveren (unreadable) wordt ook zo geschreven, maar telt niet als 'ontbreekt in het API'.
     leftover = sorted((p for p in oai_records if p not in done), key=int)
-    state['missing_in_api'] = len(leftover)
-    state['missing_ids'] = leftover[:200]
+    unreadable = set(api_state.get('unreadable', []))
+    missing = [p for p in leftover if p not in unreadable]
+    state['missing_in_api'] = len(missing)
+    state['missing_ids'] = missing[:200]
     for priref in leftover:
         header, fields = oai_records[priref]
         writer.add(transform_service.transform_article, header, fields, source, None)
@@ -199,7 +232,7 @@ def harvest_source(config: dict, source_name: str, cache_path: str, chunk_size: 
     return state
 
 
-def verify_completeness(state: dict, source: dict, max_record_errors: int, max_missing: int) -> bool:
+def verify_completeness(state: dict, source: dict, max_record_errors: int, max_missing: int, max_unreadable: int = 0) -> bool:
     """Vergelijk wat we gezien en verwerkt hebben met wat de bronnen aankondigen."""
     if state['limited']:
         logger.info('Beperkte run (--max-records): volledigheidscontrole overgeslagen.')
@@ -214,12 +247,14 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
             logger.error('ONVOLLEDIG (OAI): bron kondigt %d records aan, %d opgehaald.', state['oai_expected'],
                          state['oai_seen'])
             ok = False
-    if state['api_hits'] is None or state['api_seen'] != state['api_hits']:
-        logger.error('ONVOLLEDIG (API): bron kondigt %s records aan, %d opgehaald (%d dubbel geleverd).',
-                     state['api_hits'], state['api_seen'], state['api_duplicates'])
+    # records die het API zelf niet kon uitleveren horen bij wat de bron aankondigt: ze zijn bekend en benoemd, niet zoek
+    if state['api_hits'] is None or state['api_seen'] + state['api_unreadable'] != state['api_hits']:
+        logger.error('ONVOLLEDIG (API): bron kondigt %s records aan, %d opgehaald, %d onleesbaar (%d dubbel geleverd).',
+                     state['api_hits'], state['api_seen'], state['api_unreadable'], state['api_duplicates'])
         ok = False
-    # boeken: wat de OAI publiceert maar het API niet kent, wordt niet geschreven; artikelen worden dan alleen uit de OAI geschreven
-    not_written = state['missing_in_api'] if source['kind'] == 'book' else 0
+    # boeken: wat de OAI publiceert maar het API niet kent of niet kon uitleveren, wordt niet geschreven; artikelen
+    # worden dan alleen uit de OAI geschreven
+    not_written = state['missing_in_api'] + state['unreadable_in_scope'] if source['kind'] == 'book' else 0
     if state['written'] + state['errors'] + not_written != state['intended']:
         logger.error('Rekenfout: weggeschreven (%d) + fouten (%d) + niet in API (%d) != beoogd (%d).',
                      state['written'], state['errors'], not_written, state['intended'])
@@ -228,23 +263,29 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
         logger.error('%d records staan in de OAI maar niet in het API (toegestaan: %d): %s', state['missing_in_api'],
                      max_missing, ', '.join(state['missing_ids'][:20]))
         ok = False
+    if state['unreadable_in_scope'] > max_unreadable:
+        logger.error('%d te publiceren records waren in het API onleesbaar (toegestaan: %d): %s',
+                     state['unreadable_in_scope'], max_unreadable, ', '.join(state['unreadable_ids'][:20]))
+        ok = False
     if state['errors'] > max_record_errors:
         logger.error('%d records konden niet getransformeerd worden (toegestaan: %d): %s', state['errors'],
                      max_record_errors, ', '.join(map(str, state['error_ids'][:20])))
         ok = False
-    logger.info('Controle: OAI %s/%s, API %s/%s, beoogd=%d, weggeschreven=%d, fouten=%d, niet in API=%d -> %s',
+    logger.info('Controle: OAI %s/%s, API %s/%s, beoogd=%d, weggeschreven=%d, fouten=%d, niet in API=%d, onleesbaar=%d -> %s',
                 state['oai_seen'], state['oai_expected'], state['api_seen'], state['api_hits'], state['intended'],
-                state['written'], state['errors'], state['missing_in_api'], 'OK' if ok else 'MISLUKT')
+                state['written'], state['errors'], state['missing_in_api'], state['api_unreadable'],
+                'OK' if ok else 'MISLUKT')
     return ok
 
 
 def write_manifest(cache_path: str, source_name: str, state: dict, complete: bool):
-    keys = ('oai_seen', 'oai_expected', 'api_seen', 'api_hits', 'api_duplicates', 'intended', 'written', 'files', 'errors', 'skipped',
-            'skipped_reasons', 'out_of_scope', 'missing_in_api')
+    keys = ('oai_seen', 'oai_expected', 'oai_windows', 'api_seen', 'api_hits', 'api_duplicates', 'intended', 'written', 'files', 'errors', 'skipped',
+            'skipped_reasons', 'out_of_scope', 'missing_in_api', 'api_unreadable', 'unreadable_in_scope')
     manifest = {k: state.get(k) for k in keys}
     manifest['source'] = source_name
     manifest['error_ids'] = state.get('error_ids', [])[:200]
     manifest['missing_ids'] = state.get('missing_ids', [])[:200]
+    manifest['unreadable_ids'] = state.get('unreadable_ids', [])[:200]
     manifest['complete'] = complete
     manifest['finished_at'] = datetime.datetime.now().replace(microsecond=0).isoformat()
     with open(f'{cache_path}manifest-{source_name}.json', 'w', encoding='utf-8') as f:
@@ -275,7 +316,7 @@ def main(argv=None) -> int:
     for name in names:
         state = harvest_source(config, name, cache_path, args.chunks, args.max_records)
         complete = verify_completeness(state, config['SOURCES'][name], int(config.get('MAX_RECORD_ERRORS', 0)),
-                                       int(config.get('MAX_MISSING_IN_API', 0)))
+                                       int(config.get('MAX_MISSING_IN_API', 0)), int(config.get('MAX_UNREADABLE_IN_API', 0)))
         write_manifest(cache_path, name, state, complete)
         all_ok = all_ok and complete
     return 0 if all_ok else 1

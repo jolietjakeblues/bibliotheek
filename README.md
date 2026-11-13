@@ -65,7 +65,7 @@ python src/validate_service.py data/*.jsonld
 ```
 
 De derde opdracht oogst 100 records per bron naar `data/`; de vierde toetst ze aan de shapes. Een volledige oogst duurt naar schatting
-een tot twee uur voor de boeken ([docs/beheer.md](docs/beheer.md)).
+enkele tientallen minuten per bron; de gemeten duur staat in [docs/beheer.md](docs/beheer.md).
 
 ## Documentatie
 
