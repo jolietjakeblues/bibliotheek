@@ -1,0 +1,77 @@
+# Voorbeeld: titel uit het API, tijdschrift/jaargang/aflevering en pagina's uit de OAI.
+# Echt record (priref 200000025) uit tests/fixtures, getransformeerd door src/transform_service.py.
+# Gegenereerd door tools/maak_voorbeelden.py; niet met de hand aanpassen.
+
+@prefix cht: <https://data.cultureelerfgoed.nl/term/id/cht/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/article/3cbe562e-3162-3b90-9fc9-60941c75b676> a schema:Article,
+        schema:CreativeWork ;
+    schema:about cht:4377aa49-7e9a-43cc-8719-075bc7df7650,
+        cht:c615eaa4-85a7-4f2b-9a96-02aa766e8331,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/b17f8487-fe4c-3024-8bb9-db7969c50534>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/ce37b841-cd51-3808-a19e-41850009ecb0> ;
+    schema:author <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/ff897a9c-80e0-34c3-9f32-e559c3650bd9> ;
+    schema:creator <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/ff897a9c-80e0-34c3-9f32-e559c3650bd9> ;
+    schema:datePublished "1990"^^xsd:gYear ;
+    schema:identifier <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/8fcbd7aa-af07-34af-ac15-0339524f3bf4> ;
+    schema:isPartOf <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/publicationissue/89cff74c-b686-33e5-87c1-fe288efd24af> ;
+    schema:name "Het buitengedijkte land bij de Schelphoek in 1953"@nl ;
+    schema:pageEnd "203"^^xsd:string ;
+    schema:pageStart "198"^^xsd:string ;
+    schema:sdDatePublished "2026-07-13"^^xsd:date ;
+    schema:sdPublisher <https://www.cultureelerfgoed.nl/> ;
+    schema:spatialCoverage <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/463e88fc-64f6-38b0-ab34-a3eba08b1e55>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/98ee3a9a-3402-3b2e-9665-71455bc2d877>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/a51a3514-ee95-3d29-be0a-c6d1307706ed>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/c8d9b292-45e6-3e6b-b09d-d5a2b326aa4e>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/e234a061-cbbe-3389-a97f-821db0f2c5a0> ;
+    schema:url <https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/200000025> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/periodical/99a4b7b8-3806-3038-b907-0bc0eae195fa> a schema:Periodical ;
+    schema:additionalType <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/62138c73-d340-3df9-92b0-b6b58a15740c> ;
+    schema:name "Stad en lande : historische bijdragen en mededelingen van de Vereniging Stad en Lande van Schouwen-Duiveland"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/463e88fc-64f6-38b0-ab34-a3eba08b1e55> a schema:Place ;
+    schema:name "Schouwen-Duiveland"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/98ee3a9a-3402-3b2e-9665-71455bc2d877> a schema:Place ;
+    schema:name "Serooskerke (Schouwen)"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/a51a3514-ee95-3d29-be0a-c6d1307706ed> a schema:Place ;
+    schema:name "Schelphoek"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/c8d9b292-45e6-3e6b-b09d-d5a2b326aa4e> a schema:Place ;
+    schema:name "Nederland"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/e234a061-cbbe-3389-a97f-821db0f2c5a0> a schema:Place ;
+    schema:name "Zeeland"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/8fcbd7aa-af07-34af-ac15-0339524f3bf4> a schema:PropertyValue ;
+    schema:propertyID "priref" ;
+    schema:value "200000025"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/publicationissue/89cff74c-b686-33e5-87c1-fe288efd24af> a schema:PublicationIssue ;
+    schema:datePublished "1990"^^xsd:gYear ;
+    schema:isPartOf <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/publicationvolume/a9957b63-8f51-32fe-96dc-7fcf8e3f8493> ;
+    schema:issueNumber "69"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/publicationvolume/a9957b63-8f51-32fe-96dc-7fcf8e3f8493> a schema:PublicationVolume ;
+    schema:datePublished "1990"^^xsd:gYear ;
+    schema:isPartOf <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/periodical/99a4b7b8-3806-3038-b907-0bc0eae195fa> ;
+    schema:volumeNumber "27"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/62138c73-d340-3df9-92b0-b6b58a15740c> a schema:DefinedTerm ;
+    schema:name "tijdschrift"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/b17f8487-fe4c-3024-8bb9-db7969c50534> a schema:DefinedTerm ;
+    schema:name "dijken"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/ce37b841-cd51-3808-a19e-41850009ecb0> a schema:DefinedTerm ;
+    schema:name "overstromingen"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/ff897a9c-80e0-34c3-9f32-e559c3650bd9> a schema:Person ;
+    schema:name "Berrevoets, W.D."@nl .
+

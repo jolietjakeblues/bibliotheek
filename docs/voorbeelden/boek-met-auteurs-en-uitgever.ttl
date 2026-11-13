@@ -1,0 +1,61 @@
+# Voorbeeld: auteurs (persoon en organisatie), uitgever, plaats, ISBN, CHT-term.
+# Echt record (priref 17) uit tests/fixtures, getransformeerd door src/transform_service.py.
+# Gegenereerd door tools/maak_voorbeelden.py; niet met de hand aanpassen.
+
+@prefix cht: <https://data.cultureelerfgoed.nl/term/id/cht/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/book/36273f37-0f38-3c24-a082-31e6542f612c> a schema:Book,
+        schema:CreativeWork ;
+    schema:about cht:6b31d38d-c9ed-4ac5-9312-5883c8c28072,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/54ced42b-9147-37d4-a2cf-9457a842928a>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/734aa60f-9481-3250-b629-86d2633279c8>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/b4531d96-8af1-3ea9-b5d5-dec009fd9fa0> ;
+    schema:author <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/0bde9603-2bbd-3ab4-a67b-c81a597f8de5>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/441b6499-5a46-3ca0-9f38-d0db8e485fe5>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/f7e9321a-98b8-375d-b557-a2e05883eb66> ;
+    schema:creator <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/0bde9603-2bbd-3ab4-a67b-c81a597f8de5>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/441b6499-5a46-3ca0-9f38-d0db8e485fe5>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/f7e9321a-98b8-375d-b557-a2e05883eb66> ;
+    schema:datePublished "1996"^^xsd:gYear ;
+    schema:identifier <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/a0a31e98-4393-3aa0-a41d-62e304db8ef4> ;
+    schema:isPartOf <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/> ;
+    schema:isbn "9080257222"^^xsd:string ;
+    schema:locationCreated <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/20dc4b44-2fbb-30c6-92ca-0153b06988be> ;
+    schema:name "De provincie : partner in cultuurbeleid : naar een gebiedsgewijze en integrale aanpak"@nl ;
+    schema:numberOfPages 52 ;
+    schema:publisher <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/20621149-56e2-3d70-82d3-9467a20a6111> ;
+    schema:sdDatePublished "2024-10-16"^^xsd:date ;
+    schema:sdPublisher <https://www.cultureelerfgoed.nl/> ;
+    schema:size "52 ; ill. fot. ; 25"^^xsd:string ;
+    schema:url <https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/17> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/20621149-56e2-3d70-82d3-9467a20a6111> a schema:Organization ;
+    schema:name "Interprovinciaal Overleg"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/20dc4b44-2fbb-30c6-92ca-0153b06988be> a schema:Place ;
+    schema:name "Den Haag"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/a0a31e98-4393-3aa0-a41d-62e304db8ef4> a schema:PropertyValue ;
+    schema:propertyID "priref" ;
+    schema:value "17"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/54ced42b-9147-37d4-a2cf-9457a842928a> a schema:DefinedTerm ;
+    schema:name "Monumentenbeleid"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/734aa60f-9481-3250-b629-86d2633279c8> a schema:DefinedTerm ;
+    schema:name "provincies"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/b4531d96-8af1-3ea9-b5d5-dec009fd9fa0> a schema:DefinedTerm ;
+    schema:name "cultuurbeleid"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/0bde9603-2bbd-3ab4-a67b-c81a597f8de5> a schema:Organization ;
+    schema:name "R&H, projecten en adviezen"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/441b6499-5a46-3ca0-9f38-d0db8e485fe5> a schema:Person ;
+    schema:name "Deijck-Hofmeester, Carla van"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/person/f7e9321a-98b8-375d-b557-a2e05883eb66> a schema:Person ;
+    schema:name "Raijmakers, Willem-Jan"@nl .
+

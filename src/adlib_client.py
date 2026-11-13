@@ -34,12 +34,17 @@ def build_url(base: str, database: str, search: str, start: int, limit: int) -> 
 
 def fetch_page(base: str, database: str, search: str, start: int, limit: int,
                retries: int = 5, backoff: float = 2.0) -> ET.Element:
-    """Eén pagina ophalen en parsen. Een fout in het antwoord (diagnostic/error) is een uitzondering.
+    """Eén pagina ophalen en parsen.
 
-    Het ophalen zelf (retries, Retry-After, gzip/deflate, timeout) doet dezelfde functie als de OAI-client."""
+    Het ophalen zelf (retries, Retry-After, gzip/deflate, timeout) doet dezelfde functie als de OAI-client. Daarbovenop
+    worden twee soorten fouten opnieuw geprobeerd: een beschadigd antwoord, en een foutmelding van de server zonder
+    suggesties. Een echte syntaxisfout in de zoekopdracht komt met `suggestions` terug en is dus niet tijdelijk; die
+    geeft meteen een AdlibError. Voorbeeld van een tijdelijke serverfout (gezien in een GitHub Action, lokaal niet te
+    reproduceren): 'An item with the same key has already been added.'"""
     url = build_url(base, database, search, start, limit)
+    attempts = max(1, retries)
     last = None
-    for attempt in range(max(1, retries // 2)):
+    for attempt in range(attempts):
         raw = oai_client._open(url, retries, backoff)
         text = oai_client.INVALID_XML_CHARS.sub('', raw.decode('utf-8', errors='replace'))
         try:
@@ -52,10 +57,15 @@ def fetch_page(base: str, database: str, search: str, start: int, limit: int,
             logger.warning('Pagina startfrom=%d is geen geldige XML (%s); opnieuw proberen', start, e)
             time.sleep(backoff * (attempt + 1))
             continue
-        error = root.find('.//diagnostic/error/message')
-        if error is not None:
-            raise AdlibError(f'{error.text} (search={search!r}, startfrom={start})')
-        return root
+        error = root.find('.//diagnostic/error')
+        if error is None:
+            return root
+        message = f"{error.findtext('message')} (search={search!r}, startfrom={start})"
+        last = AdlibError(message)
+        if error.find('suggestions') is not None:          # syntaxisfout in de zoekopdracht: niet tijdelijk
+            raise last
+        logger.warning('Serverfout van het API (poging %d/%d): %s', attempt + 1, attempts, message)
+        time.sleep(backoff * (attempt + 1))
     raise last
 
 

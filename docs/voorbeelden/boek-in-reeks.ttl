@@ -1,0 +1,52 @@
+# Voorbeeld: reeks met deelnummer.
+# Echt record (priref 81) uit tests/fixtures, getransformeerd door src/transform_service.py.
+# Gegenereerd door tools/maak_voorbeelden.py; niet met de hand aanpassen.
+
+@prefix cht: <https://data.cultureelerfgoed.nl/term/id/cht/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/book/d81ed59f-022b-3b74-accf-a76c9d38cc50> a schema:Book,
+        schema:CreativeWork ;
+    schema:about cht:b05a237f-b6a9-4aff-9db3-d88580409575,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/1c5253a6-37e4-374f-b069-1092991ffe83>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/a8c66803-b8e0-3bfd-bdd4-7e42d96f926d> ;
+    schema:datePublished "1998"^^xsd:gYear ;
+    schema:description "Met bijlagen en noten"@nl ;
+    schema:identifier <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/13828bfb-4e59-34ff-90d3-e36d4b7ebeb7> ;
+    schema:isPartOf <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/series/7de7f757-551e-33d5-9f39-2a87d3881114> ;
+    schema:isbn "9075445334"^^xsd:string ;
+    schema:locationCreated <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/20dc4b44-2fbb-30c6-92ca-0153b06988be> ;
+    schema:name "Advies over het concept Europees Ruimtelijke Ontwikkelingsperspectief (EROP)"@nl ;
+    schema:numberOfPages 33 ;
+    schema:position "003"^^xsd:string ;
+    schema:publisher <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/ae84cf23-ab4b-3033-adaa-50e08360fb90> ;
+    schema:sdDatePublished "2026-06-30"^^xsd:date ;
+    schema:sdPublisher <https://www.cultureelerfgoed.nl/> ;
+    schema:size "33 ; 24"^^xsd:string ;
+    schema:spatialCoverage <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/cd1309e1-234d-3e79-bdcc-0a5d62ab514b> ;
+    schema:url <https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/81> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/ae84cf23-ab4b-3033-adaa-50e08360fb90> a schema:Organization ;
+    schema:name "VROM-Raad"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/20dc4b44-2fbb-30c6-92ca-0153b06988be> a schema:Place ;
+    schema:name "Den Haag"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/cd1309e1-234d-3e79-bdcc-0a5d62ab514b> a schema:Place ;
+    schema:name "Europa"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/13828bfb-4e59-34ff-90d3-e36d4b7ebeb7> a schema:PropertyValue ;
+    schema:propertyID "priref" ;
+    schema:value "81"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/series/7de7f757-551e-33d5-9f39-2a87d3881114> a schema:CreativeWorkSeries ;
+    schema:name "Advies Vromraad"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/1c5253a6-37e4-374f-b069-1092991ffe83> a schema:DefinedTerm ;
+    schema:name "ruimtelijke ordening"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/a8c66803-b8e0-3bfd-bdd4-7e42d96f926d> a schema:DefinedTerm ;
+    schema:name "Ruimtelijk beleid"@nl .
+

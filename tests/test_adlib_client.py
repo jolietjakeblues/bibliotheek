@@ -66,14 +66,15 @@ def test_max_records_stops_early_without_fetching_everything(monkeypatch):
     assert len(out) == 15 and len(calls) < 20             # niet alle 100 pagina's
 
 
-def test_api_error_message_raises(monkeypatch):
+def test_syntax_error_with_suggestions_raises_immediately(monkeypatch):
     import urllib.request
-
+    calls = []
     body = (b'<adlibXML><diagnostic><hits>0</hits><error><message>Unexpected token</message>'
-            b'</error></diagnostic></adlibXML>')
-    monkeypatch.setattr(urllib.request, 'urlopen', lambda *a, **k: FakeResp(body))
+            b'<suggestions><suggestion> and </suggestion></suggestions></error></diagnostic></adlibXML>')
+    monkeypatch.setattr(urllib.request, 'urlopen', lambda *a, **k: (calls.append(1), FakeResp(body))[1])
     with pytest.raises(adlib_client.AdlibError, match='Unexpected token'):
         adlib_client.fetch_page('http://x', 'books', 'bad query', 0, 10)
+    assert len(calls) == 1                                    # niet opnieuw proberen: dit wordt nooit beter
 
 
 class FakeResp:
@@ -108,3 +109,30 @@ def test_text_helpers_skip_empty_and_duplicates():
                         '<Keyword><keyword.contents/></Keyword><Keyword><keyword.contents>a b</keyword.contents></Keyword></record>')
     assert adlib_client.texts(rec, 'Keyword/keyword.contents') == ['a b']
     assert adlib_client.first(rec, 'Nope/x') is None
+
+
+SAME_KEY = (b'<adlibXML><diagnostic><hits>0</hits><error><message>An item with the same key has already been added.'
+            b'</message></error></diagnostic></adlibXML>')
+GOOD = b'<adlibXML><recordList><record priref="1"/></recordList><diagnostic><hits>1</hits></diagnostic></adlibXML>'
+
+
+def test_transient_server_error_is_retried_until_it_works(monkeypatch):
+    """Het echte geval uit de GitHub Action: de server geeft eenmalig een interne fout zonder suggesties."""
+    import time
+    import urllib.request
+    answers = iter([SAME_KEY, SAME_KEY, GOOD])
+    monkeypatch.setattr(urllib.request, 'urlopen', lambda *a, **k: FakeResp(next(answers)))
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    root = adlib_client.fetch_page('http://x', 'books', 'all', 1, 10, retries=5)
+    assert root.find('.//record').get('priref') == '1'
+
+
+def test_persistent_server_error_is_raised_after_all_attempts(monkeypatch):
+    import time
+    import urllib.request
+    calls = []
+    monkeypatch.setattr(urllib.request, 'urlopen', lambda *a, **k: (calls.append(1), FakeResp(SAME_KEY))[1])
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    with pytest.raises(adlib_client.AdlibError, match='same key'):
+        adlib_client.fetch_page('http://x', 'books', 'all', 1, 10, retries=4)
+    assert len(calls) == 4

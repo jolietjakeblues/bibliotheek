@@ -1,0 +1,63 @@
+# Voorbeeld: rijksmonumentnummer en plaatsen.
+# Echt record (priref 90) uit tests/fixtures, getransformeerd door src/transform_service.py.
+# Gegenereerd door tools/maak_voorbeelden.py; niet met de hand aanpassen.
+
+@prefix cht: <https://data.cultureelerfgoed.nl/term/id/cht/> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/book/8c10d456-eaf8-3577-82e5-b17fff745ac8> a schema:Book,
+        schema:CreativeWork ;
+    schema:about cht:1130e375-3469-4e63-a8d4-5fcb339f7536,
+        cht:20ee0f42-6390-4d87-9442-131fc94ce14b,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/monument/91129940-12e4-36ab-b53f-1fe64253a86b>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/1dafd6f6-31c0-37d0-bb12-124278dacb5a>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/2fc56dcf-ef4e-3590-bac9-dccede8948cd> ;
+    schema:datePublished "1997"^^xsd:gYear ;
+    schema:identifier <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/ad4292ae-91b1-3f81-accd-9e288fef0919> ;
+    schema:isPartOf <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/> ;
+    schema:locationCreated <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/215bea84-94f9-3178-939f-23dc04ac1093> ;
+    schema:name "Slot Loevestein : beleidsplan 1998-2000 : \"een eeuwenoud slot in de 21e eeuw\""@nl ;
+    schema:numberOfPages 54 ;
+    schema:publisher <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/a60d3f3b-5a6d-3e06-a58d-de024d15c78b> ;
+    schema:sdDatePublished "2025-02-06"^^xsd:date ;
+    schema:sdPublisher <https://www.cultureelerfgoed.nl/> ;
+    schema:size "54 ; 30"^^xsd:string ;
+    schema:spatialCoverage <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/1b0fc17f-6aa2-31c7-9fbf-6879b1ec4a7b>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/215bea84-94f9-3178-939f-23dc04ac1093>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/c8d9b292-45e6-3e6b-b09d-d5a2b326aa4e>,
+        <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/e695059a-f3be-331f-94d6-678d98149c7d> ;
+    schema:url <https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/90> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/monument/91129940-12e4-36ab-b53f-1fe64253a86b> a schema:LandmarksOrHistoricalBuildings ;
+    schema:identifier <https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/6eada307-7a84-38a4-9702-92414777e4b9> .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/organization/a60d3f3b-5a6d-3e06-a58d-de024d15c78b> a schema:Organization ;
+    schema:name "Stichting Museum Slot Loevestein"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/1b0fc17f-6aa2-31c7-9fbf-6879b1ec4a7b> a schema:Place ;
+    schema:name "Gelderland"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/c8d9b292-45e6-3e6b-b09d-d5a2b326aa4e> a schema:Place ;
+    schema:name "Nederland"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/e695059a-f3be-331f-94d6-678d98149c7d> a schema:Place ;
+    schema:name "Slot Loevestein"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/6eada307-7a84-38a4-9702-92414777e4b9> a schema:PropertyValue ;
+    schema:propertyID "rijksmonumentnummer" ;
+    schema:value "10081"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/propertyvalue/ad4292ae-91b1-3f81-accd-9e288fef0919> a schema:PropertyValue ;
+    schema:propertyID "priref" ;
+    schema:value "90"^^xsd:string .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/1dafd6f6-31c0-37d0-bb12-124278dacb5a> a schema:DefinedTerm ;
+    schema:name "kastelen"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/term/2fc56dcf-ef4e-3590-bac9-dccede8948cd> a schema:DefinedTerm ;
+    schema:name "beleid"@nl .
+
+<https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/id/place/215bea84-94f9-3178-939f-23dc04ac1093> a schema:Place ;
+    schema:name "Poederoijen"@nl .
+
