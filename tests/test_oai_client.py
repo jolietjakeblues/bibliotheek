@@ -91,3 +91,100 @@ def test_iter_headers_uses_list_identifiers(monkeypatch):
     assert [(h['identifier'], h['deleted']) for h in out] == [('db:1', False), ('db:2', True), ('db:3', False)]
     assert state['seen'] == 3 and state['complete_list_size'] == 3
     assert 'verb=ListIdentifiers' in urls[0] and 'resumptionToken=abc' in urls[1]
+
+
+# --- tijdvakken (parallel ophalen) -------------------------------------------------------------------------------
+
+import datetime  # noqa: E402
+
+from conftest import FakeOai  # noqa: E402
+
+START = datetime.datetime(2026, 3, 1, 12, 0, 0)
+NOW = datetime.datetime(2026, 3, 1, 13, 0, 0)
+
+
+def dense(n=300):
+    """Records om de halve seconde: de helft heeft een fractie, en elke hele seconde bevat een record. Zo valt er altijd
+    een record precies op en vlak na de grens waar een tijdvak gehalveerd wordt."""
+    return {i: START + datetime.timedelta(seconds=0.5 * i) for i in range(1, n + 1)}
+
+
+def served(monkeypatch, fake):
+    monkeypatch.setattr(oai_client, 'fetch_and_parse', fake.fetch)
+    monkeypatch.setattr(oai_client.time, 'sleep', lambda s: None)
+    return fake
+
+
+def window_ids(fake, window):
+    query = {'from': window[0]}
+    if window[1]:
+        query['until'] = window[1]
+    return set(fake._list(query))
+
+
+def test_naive_adjacent_windows_lose_records_with_fractional_seconds(monkeypatch):
+    """Waarom de tijdvakken overlappen: [lo, mid] en [mid+1s, hi] laten records tussen mid en mid+1s vallen."""
+    fake = FakeOai(dense())
+    mid = START + datetime.timedelta(seconds=60)
+    f = lambda d: d.strftime(oai_client.STAMP)  # noqa: E731
+    left = set(fake._list({'from': f(START), 'until': f(mid)}))
+    right = set(fake._list({'from': f(mid + datetime.timedelta(seconds=1))}))
+    assert len(left | right) < 300                                      # het record op mid+0,5s zit in geen van beide
+
+
+def test_windows_cover_every_record(monkeypatch):
+    fake = served(monkeypatch, FakeOai(dense()))
+    total, windows = oai_client.plan_windows('http://x', 'books', 'oai_dc_book', max_window=40, now=NOW)
+    assert total == 300 and len(windows) > 5
+    assert set().union(*(window_ids(fake, w) for w in windows)) == set(range(1, 301))    # niets valt ertussen
+    assert all(n <= 40 for _, _, n in windows)
+    assert all(n > 0 for _, _, n in windows)                             # lege tijdvakken worden niet opgehaald
+
+
+def test_windowed_iteration_yields_each_record_once(monkeypatch):
+    fake = served(monkeypatch, FakeOai(dense()))
+    state = {}
+    out = list(oai_client.iter_windowed('http://x', 'books', 'oai_dc_book', state, workers=3, max_window=40,
+                                        sleep_between=0))
+    ids = [h['identifier'] for h in out]
+    assert sorted(ids) == sorted(f'1964:{i}' for i in range(1, 301)) and len(set(ids)) == 300
+    assert state['seen'] == 300 == state['complete_list_size'] and state['windows'] > 5
+    assert state['overlap'] >= 1                                         # records precies op een grens kwamen twee keer binnen
+    assert any('from' in r for r in fake.requests)
+
+
+def test_windowed_list_records_returns_header_and_metadata(monkeypatch):
+    served(monkeypatch, FakeOai(dense(60), db='1970'))
+    out = list(oai_client.iter_windowed('http://x', 'article', 'oai_dc', {}, verb='ListRecords', workers=2,
+                                        max_window=15, sleep_between=0))
+    assert len(out) == 60
+    header, element = out[0]
+    assert header['identifier'].startswith('1970:') and element is not None
+
+
+def test_window_that_changes_after_planning_fails_the_run(monkeypatch):
+    served(monkeypatch, FakeOai(dense(100)))
+    real = oai_client.plan_windows
+
+    def stale(*a, **k):                                                  # de bron veranderde na het plannen
+        total, windows = real(*a, **k)
+        return total, [(a_, b_, n + 1) for a_, b_, n in windows]
+
+    monkeypatch.setattr(oai_client, 'plan_windows', stale)
+    with pytest.raises(oai_client.OaiError, match='verwacht'):
+        list(oai_client.iter_windowed('http://x', 'books', 'oai_dc_book', {}, workers=2, max_window=20, sleep_between=0))
+
+
+def test_record_outside_the_windows_stops_the_planning(monkeypatch):
+    stamps = dense(20)
+    stamps[99] = datetime.datetime(1850, 1, 1)                           # ouder dan het vroegste tijdvak
+    served(monkeypatch, FakeOai(stamps))
+    with pytest.raises(oai_client.OaiError, match='buiten de tijdvakken'):
+        oai_client.plan_windows('http://x', 'books', 'oai_dc_book', max_window=5, now=NOW)
+
+
+def test_count_of_a_short_list_without_complete_list_size(monkeypatch):
+    body = (f'<OAI-PMH xmlns="{OAI}"><ListIdentifiers><header><identifier>db:1</identifier></header>'
+            f'<header><identifier>db:2</identifier></header></ListIdentifiers></OAI-PMH>')
+    monkeypatch.setattr(oai_client, 'fetch_and_parse', lambda *a, **k: ET.fromstring(body))
+    assert oai_client.count_window('http://x', 'books', 'oai_dc_book', ('2026-01-01T00:00:00Z', None)) == 2

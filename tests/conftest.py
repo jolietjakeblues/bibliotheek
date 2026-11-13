@@ -60,3 +60,62 @@ def build_articles(config, monkeypatch):
 
 def node_for(config, kind: str, priref: str):
     return uris.get_object_uri(config['BASE_URI'], config['COLLECTION_ID'], priref, kind)
+
+
+# ---------------------------------------------------------------------------
+# nagebootste OAI-server met tijdvakken
+# ---------------------------------------------------------------------------
+
+class FakeOai:
+    """Een OAI-server met `from`/`until` zoals de echte: beide op hele seconden en inclusief, terwijl de datestamps
+    fracties van een seconde hebben (de header toont ze afgekapt). Pagina's van `page_size` records met een resumptionToken."""
+
+    NS = 'http://www.openarchives.org/OAI/2.0/'
+
+    def __init__(self, stamps: dict, page_size: int = 5, db: str = '1964'):
+        import datetime
+        self.dt = datetime
+        self.stamps = dict(stamps)                 # identifier-nummer -> datetime (met microseconden)
+        self.page_size, self.db = page_size, db
+        self.requests, self.tokens = [], {}
+        self.lock = __import__('threading').Lock()
+
+    def _parse(self, text):
+        return self.dt.datetime.strptime(text, '%Y-%m-%dT%H:%M:%SZ')
+
+    def _list(self, params):
+        lo = self._parse(params['from']) if 'from' in params else None
+        hi = self._parse(params['until']) if 'until' in params else None
+        return [i for i, t in sorted(self.stamps.items())
+                if (lo is None or t >= lo) and (hi is None or t <= hi)]
+
+    def fetch(self, url, retries=5, backoff=2.0):
+        import urllib.parse
+        import xml.etree.ElementTree as ET
+        params = {k: v[0] for k, v in urllib.parse.parse_qs(urllib.parse.urlparse(url).query).items()}
+        verb = params['verb']
+        with self.lock:
+            self.requests.append(params)
+            if 'resumptionToken' in params:
+                ident, offset = params['resumptionToken'].rsplit('@', 1)
+                query, offset = self.tokens[ident], int(offset)
+            else:
+                query, offset = {k: v for k, v in params.items() if k in ('from', 'until')}, 0
+                ident = str(len(self.tokens))
+                self.tokens[ident] = query
+        ids = self._list(query)
+        if not ids:
+            return ET.fromstring(f'<OAI-PMH xmlns="{self.NS}"><error code="noRecordsMatch">geen</error></OAI-PMH>')
+        more = offset + self.page_size < len(ids)
+        size = f'completeListSize="{len(ids)}" cursor="{offset}"'
+        token = f'<resumptionToken {size}>{ident}@{offset + self.page_size}</resumptionToken>' if more             else f'<resumptionToken {size}/>'
+        items = ''
+        for i in ids[offset:offset + self.page_size]:
+            header = (f'<header><identifier>{self.db}:{i}</identifier>'
+                      f'<datestamp>{self.stamps[i].strftime("%Y-%m-%dT%H:%M:%SZ")}</datestamp></header>')
+            if verb == 'ListRecords':
+                items += (f'<record>{header}<metadata><oai_dc:dc xmlns:oai_dc="x" xmlns:dc="y"><dc:source>bron {i}</dc:source>'
+                          f'</oai_dc:dc></metadata></record>')
+            else:
+                items += header
+        return ET.fromstring(f'<OAI-PMH xmlns="{self.NS}"><{verb}>{items}{token}</{verb}></OAI-PMH>')

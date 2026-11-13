@@ -50,11 +50,13 @@ Hoe de OAI haar selectie maakt, is niet bekend. Dat is een open vraag aan de beh
 
 ### Boeken (`kind: book`)
 
-1. **Selectie:** alle identifiers van de OAI-set `books` ophalen (`ListIdentifiers`, 18.000+ pagina's). Dat zijn de te publiceren priref's.
+1. **Selectie:** alle identifiers van de OAI-set `books` ophalen (`ListIdentifiers`, 18.000+ pagina's), in tijdvakken die tegelijk worden
+   opgehaald (zie "Eigenaardigheden"). Dat zijn de te publiceren priref's.
 2. **Inhoud:** alle API-records uit `api_search` ophalen (`priref<200000000 or priref>=300000000`, ongeveer 217.000), met drie pagina's
    tegelijk.
 3. Per API-record dat in de selectie zit: transformeren naar schema.org. De rest telt als `out_of_scope`.
-4. Priref's in de selectie die het API niet leverde: `missing_in_api` (standaard een fout).
+4. Priref's in de selectie die het API niet leverde: `missing_in_api` (standaard een fout). Priref's die het API zelf niet kón leveren
+   omdat het record in de bron fout staat, tellen apart als `unreadable` (zie "Eigenaardigheden").
 
 ### Artikelen (`kind: article`)
 
@@ -80,10 +82,11 @@ De run faalt, en publiceert dan niets, bij elk van deze gevallen:
 | Poort | Controle |
 |---|---|
 | Volledigheid OAI | opgehaald == `completeListSize` |
-| Volledigheid API | opgehaald == `diagnostic/hits` |
+| Volledigheid API | opgehaald + onleesbaar == `diagnostic/hits` |
 | Dubbele API-records | een record dat twee keer wordt geleverd betekent een kapotte paginering |
 | Boekhouding | weggeschreven + fouten + niet-in-API == beoogd |
 | Ontbrekend in API | meer dan `MAX_MISSING_IN_API` records (standaard 0) |
+| Onleesbaar in API | meer dan `MAX_UNREADABLE_IN_API` te publiceren records die het API zelf niet kon leveren (standaard 10) |
 | Transformatiefouten | meer dan `MAX_RECORD_ERRORS` records (standaard 0) |
 | SHACL | minstens één **Violation** in een chunk |
 
@@ -121,8 +124,8 @@ De dataset bevat al een oudere conversie in andere graphs (`…/graph/bib`, `bib
 
 | Bestand | Rol |
 |---|---|
-| `src/oai_client.py` | OAI-PMH: `ListRecords`, `ListIdentifiers`, resumption tokens, retries, gzip |
-| `src/adlib_client.py` | Adlib-API: parallelle paginering (let op: `startfrom` telt vanaf 1), dubbelen detecteren, tijdelijke serverfouten opnieuw proberen |
+| `src/oai_client.py` | OAI-PMH: `ListRecords`, `ListIdentifiers`, resumption tokens, retries, gzip, parallel ophalen in tijdvakken |
+| `src/adlib_client.py` | Adlib-API: parallelle paginering (let op: `startfrom` telt vanaf 1), dubbelen detecteren, tijdelijke serverfouten opnieuw proberen, onleesbare records isoleren |
 | `src/transform_service.py` | de mapping naar schema.org |
 | `src/harvest_service.py` | selectie, samenvoegen, chunks, boekhouding, `manifest-*.json` |
 | `src/validate_service.py` | SHACL-toetsing van chunks |
@@ -144,5 +147,19 @@ Gevonden tijdens de bouw, en bewust in de code opgevangen:
 - **OAI `GetRecord` werkt niet**, ook niet voor bestaande records. De selectie gaat daarom via `ListIdentifiers`.
 - **OAI-formaten:** de server noemt vijf formaten, maar elke set accepteert er één.
 - **`deletedRecord = No`:** verwijderde records zijn niet te herkennen. Daarom oogst elke run alles en vervangt de graph de vorige.
+- **Een kapot record laat het API een hele pagina weigeren.** Eén boek (priref 450004680) heeft in veld `t3` de tekst `76, 85`
+  waar een getal hoort. De server antwoordt dan met `Invalid integer value ... record number 450004680` in plaats van de pagina,
+  ook bij een directe opvraag en ook als je maar enkele velden vraagt. De eerste volledige run viel hierop om na ruim drie uur.
+  Een foutmelding die een record noemt is dus niet tijdelijk. De client deelt zo'n pagina in tweeën tot het ene record
+  overblijft, slaat dat over en noemt het in het manifest (`unreadable_ids`); de rest van de pagina komt gewoon binnen. Een fout
+  zonder record wordt niet omzeild. Het record moet in de catalogus worden hersteld; tot dan telt het mee tegen `MAX_UNREADABLE_IN_API`.
+- **De OAI-lijst is in tijdvakken parallel op te halen.** Een lijst is anders alleen achter elkaar te lezen (elke pagina wijst naar
+  de volgende), en dat duurde voor 182.000 boeken ruim drie uur (de eerste volledige run). Een pagina kost zelf ongeveer 0,07 s;
+  alleen het openen van een lijst ongeveer 0,7 s. `from` en `until` beperken de lijst tot een tijdvak; de planner halveert tijdvakken
+  tot ze hooguit `SRC_OAI_WINDOW` records bevatten, en `SRC_OAI_WORKERS` tijdvakken worden tegelijk opgehaald.
+- **`from`/`until` rekenen op hele seconden, de datestamps hebben fracties.** Sluiten twee tijdvakken met een seconde op elkaar aan
+  (`[lo, mid]` en `[mid+1s, hi]`), dan valt een record op `mid` + 0,5 s in geen van beide (gevonden: 9 van 63.259). De tijdvakken
+  overlappen daarom op de grens, records worden ontdubbeld op identifier, en de planner controleert dat de tellingen sluiten. Elk
+  tijdvak moet bovendien precies zoveel records opleveren als de OAI vooraf meldde, en samen precies de hele lijst; anders faalt de run.
 - **Het API stuurt gzip-gecomprimeerde antwoorden.** De client pakt die uit (dezelfde functie als bij de OAI); zonder uitpakken gaf
   elke pagina een parsefout.

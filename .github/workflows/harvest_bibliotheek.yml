@@ -48,8 +48,8 @@ jobs:
       - name: Functionele tests en SHACL-tests
         run: python -m pytest
 
-  # De bronnen draaien parallel. Geschat uit een steekproef van 15.000 boeken: de boeken een tot twee uur (selectie uit de
-  # OAI, 217.000 API-records, validatie), de artikelen ongeveer een half uur. De time-out laat ruim marge voor een trage bron.
+  # De bronnen draaien parallel. Gemeten: de boekenselectie uit de OAI duurde achter elkaar 3u12m (nu in tijdvakken parallel),
+  # de 217.000 API-records van de boeken en de artikelen (OAI plus API) ongeveer een half uur. De time-out laat ruim marge.
   harvest:
     needs: test
     runs-on: ubuntu-latest
