@@ -130,6 +130,23 @@ def _count_api(state: dict, api_state: dict, scope):
                        len(unreadable), state['unreadable_in_scope'], ', '.join(unreadable[:20]))
 
 
+def _exclude_other_source(scope: set, source: dict, state: dict) -> set:
+    """Haal priref's uit de selectie die bij een andere bron horen (`exclude_priref`, lijst van [van, tot]).
+
+    De OAI-set `books` bevat ook de tijdschriftartikelen (priref 200.000.000 tot 300.000.000); die gaan via de bron `article`.
+    Ze worden niet als 'ontbreekt in het API' geteld, maar als overgeslagen met een reden, zodat het zichtbaar blijft."""
+    ranges = [(int(lo), int(hi)) for lo, hi in source.get('exclude_priref', [])]
+    if not ranges:
+        return scope
+    kept = {p for p in scope if not any(lo <= int(p) <= hi for lo, hi in ranges)}
+    if len(kept) != len(scope):
+        state['skipped'] += len(scope) - len(kept)
+        reason = 'priref in ' + ', '.join(f'{lo}-{hi}' for lo, hi in ranges) + ' (hoort bij een andere bron)'
+        state['skipped_reasons'][reason] = len(scope) - len(kept)
+        logger.info('%d records uit de selectie horen bij een andere bron en worden hier overgeslagen', len(scope) - len(kept))
+    return kept
+
+
 def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, max_records=None):
     scope = None
     if source.get('scope', 'oai') == 'oai':
@@ -143,6 +160,7 @@ def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, 
                 scope.add(transform_service.record_priref(header['identifier']))
         state['oai_seen'], state['oai_expected'] = oai_state['seen'], oai_state.get('complete_list_size')
         state['oai_windows'] = oai_state.get('windows')
+        scope = _exclude_other_source(scope, source, state)
         state['intended'] = len(scope)
         logger.info('Selectie: %d records', len(scope))
 

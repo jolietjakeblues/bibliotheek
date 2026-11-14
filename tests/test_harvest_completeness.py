@@ -125,6 +125,25 @@ def test_record_in_oai_but_not_in_api_fails_and_is_named(monkeypatch, tmp_path):
     assert m['missing_in_api'] == 1 and m['missing_ids'] == ['7'] and m['written'] == 24
 
 
+def test_articles_in_the_books_set_are_skipped_with_a_reason_not_reported_missing(monkeypatch, tmp_path):
+    # Gevonden in de eerste echte run: de OAI-set books bevat ook 26.975 artikelen (priref 2e8-3e8). Die staan niet in de
+    # API-zoekopdracht van de boeken en liepen daar vast als 'niet in API'; ze horen bij de bron article.
+    articles = list(range(200000001, 200000006))
+    _setup(monkeypatch, tmp_path, 'books', ids=list(range(1, 21)) + articles, api_ids=range(1, 21))
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['complete'] is True and m['written'] == 20 and m['intended'] == 20 and m['missing_in_api'] == 0
+    assert m['oai_seen'] == m['oai_expected'] == 25 and m['skipped'] == 5
+    assert list(m['skipped_reasons'].values()) == [5]
+    assert '200000000-299999999' in next(iter(m['skipped_reasons']))
+
+
+def test_book_outside_the_excluded_range_that_is_missing_in_api_still_fails(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'books', ids=list(range(1, 21)) + [200000001], api_ids=[i for i in range(1, 21) if i != 7])
+    assert run('books') == 1
+    assert manifest(tmp_path, 'books')['missing_ids'] == ['7']
+
+
 def test_missing_in_api_can_be_allowed(monkeypatch, tmp_path):
     _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), api_ids=[i for i in range(1, 26) if i != 7],
            MAX_MISSING_IN_API=1)

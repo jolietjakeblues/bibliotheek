@@ -31,8 +31,8 @@ Aanbevolen volgorde voor een nieuwe of gewijzigde pijplijn:
 
 > Gemeten: de eerste volledige run haalde de boekenselectie uit de OAI achter elkaar op en deed er 3 uur 12 minuten over, daarna
 > viel hij om op een kapot record (zie [architectuur.md](architectuur.md)). Lokaal kostten de API-records van de boeken (217.000)
-> ongeveer 26 minuten en de artikelen (OAI plus API) ongeveer 23 minuten. Sindsdien wordt de OAI in tijdvakken opgehaald; noteer
-> hier de werkelijke duur na de eerstvolgende volledige run.
+> ongeveer 26 minuten en de artikelen (OAI plus API) ongeveer 23 minuten. Sindsdien wordt de OAI in tijdvakken opgehaald: de boekenselectie
+> (182.397 records, 60 tijdvakken, 3 werkers) duurde 66 minuten. Noteer hier de duur van de eerstvolgende volledige run.
 
 Een testrun slaat de volledigheidscontrole bewust over (er is immers maar een deel opgehaald). De echte controle zie je bij stap 2.
 

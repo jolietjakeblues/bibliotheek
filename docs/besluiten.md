@@ -13,7 +13,8 @@ Twee lijsten: wat nog besloten of uitgezocht moet worden, en welke keuzes zijn g
 | 5 | **Oude graphs in `rce/bibliotheek`** | `bib`, `bib-aut`, `bib-corpaut`, `bib-publishers`, `bib-series`, `bib-thesaurus` bevatten een oudere conversie. De boeken staan daardoor tijdelijk dubbel. | RCE | oude graphs blijven ongemoeid |
 | 6 | **NDE Datasetregister** | De dataset moet nog met een beschrijving worden aangemeld, zoals bij de andere RCE-datasets. Los van deze pijplijn. | RCE | n.v.t. |
 | 7 | **Testdataset vóór livegang** | De Triply-dataset staat vast in de workflow (`rce/bibliotheek`). Een eerste run naar een aparte testdataset zou veiliger zijn. | beheerder van de pijplijn | eerst `publish` uit |
-| 8 | **Eerste volledige run** | Nog niet gedraaid. Looptijd, `missing_in_api` en het gedrag van `--mode overwrite` bij een tweede run zijn nog niet gezien. | beheerder van de pijplijn | zie [beheer.md](beheer.md) |
+| 8 | **Volledige run met publicatie** | Tweemaal gestart, nog niet geslaagd: eerst een kapot bronrecord, daarna 26.975 artikelen in de boekenset (beide opgelost). De publicatie naar Triply, `--mode overwrite` bij een tweede run en de werkelijke looptijd zijn nog niet gezien. | beheerder van de pijplijn | zie [beheer.md](beheer.md) |
+| 9 | **710 artikelen alleen in de OAI-set `books`** | Van de 26.975 artikelen in de boekenset staan er 26.265 ook in de set `article`. De overige 710 (bijvoorbeeld 200000044 "Restauratie en herbestemming van kastelen in Limburg") hebben geen artikelrecord in de OAI en dus geen tijdschriftgegevens. Zijn ze openbaar? Zo ja, dan kunnen ze als artikel zonder tijdschrift worden gepubliceerd. | RCE en beheerder van de OAI | worden niet gepubliceerd (alleen de artikelset) |
 
 ## Mogelijke vervolgstappen
 
@@ -47,6 +48,7 @@ Twee lijsten: wat nog besloten of uitgezocht moet worden, en welke keuzes zijn g
 | **Records die falen laten geen halve triples achter** | een record wordt eerst apart opgebouwd. |
 | **Warnings blokkeren niet, Violations wel** | bekende hiaten in de bron (een boek zonder auteur) mogen publicatie niet tegenhouden. |
 | **`startfrom` begint bij 1 en dubbelen laten de run falen** | het API laat anders pagina's overlappen (gevonden in een live steekproef). |
+| **Artikelen in de OAI-set `books` lopen via de bron `article`** | de boekenset bevat ook alle artikelen (`exclude_priref`); zo staat elk artikel één keer, met tijdschriftgegevens uit de artikelset. |
 | **Een record dat het API niet kan leveren wordt overgeslagen, tot 10 stuks** | één kapot bronrecord (priref 450004680) liet de eerste volledige run na 3 uur omvallen. Elk overgeslagen record staat met priref in het manifest; `MAX_UNREADABLE_IN_API` is `0` te zetten voor een strenge run. |
 | **OAI-selectie in tijdvakken parallel** | de selectie duurde achter elkaar 3u12m. Tijdvakken overlappen op de grens (anders gaan records met fracties van een seconde verloren) en elk tijdvak en het totaal worden gecontroleerd. |
 | **Tijdelijke serverfouten opnieuw proberen, syntaxisfouten niet** | de Adlib-server gaf in een GitHub Action eenmalig een interne fout. |

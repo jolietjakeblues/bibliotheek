@@ -144,6 +144,10 @@ Gevonden tijdens de bouw, en bewust in de code opgevangen:
 - **Tijdelijke serverfouten.** Het API gaf in een GitHub Action eenmalig `An item with the same key has already been added.`
   (een interne fout, lokaal niet te reproduceren). De client probeert zulke fouten opnieuw; een syntaxisfout in de zoekopdracht
   (`suggestions` in het antwoord) niet.
+- **De OAI-set `books` bevat ook de tijdschriftartikelen.** Van de 182.397 records hebben 26.975 een priref van 200.000.000 tot
+  300.000.000, het artikelbereik, bijvoorbeeld `1964:200000001`. De OAI-set `article` (26.265 records) is daar een deel van; 710
+  artikelen staan alleen in de boekenset. De boekenbron slaat dit bereik over (`exclude_priref`), het telt als overgeslagen met een
+  reden in het manifest en niet als "niet in API". Gevonden in de eerste echte run; een steekproef kon dit niet laten zien.
 - **OAI `GetRecord` werkt niet**, ook niet voor bestaande records. De selectie gaat daarom via `ListIdentifiers`.
 - **OAI-formaten:** de server noemt vijf formaten, maar elke set accepteert er één.
 - **`deletedRecord = No`:** verwijderde records zijn niet te herkennen. Daarom oogst elke run alles en vervangt de graph de vorige.
@@ -154,8 +158,10 @@ Gevonden tijdens de bouw, en bewust in de code opgevangen:
   overblijft, slaat dat over en noemt het in het manifest (`unreadable_ids`); de rest van de pagina komt gewoon binnen. Een fout
   zonder record wordt niet omzeild. Het record moet in de catalogus worden hersteld; tot dan telt het mee tegen `MAX_UNREADABLE_IN_API`.
 - **De OAI-lijst is in tijdvakken parallel op te halen.** Een lijst is anders alleen achter elkaar te lezen (elke pagina wijst naar
-  de volgende), en dat duurde voor 182.000 boeken ruim drie uur (de eerste volledige run). Een pagina kost zelf ongeveer 0,07 s;
-  alleen het openen van een lijst ongeveer 0,7 s. `from` en `until` beperken de lijst tot een tijdvak; de planner halveert tijdvakken
+  de volgende), en dat duurde voor 182.000 boeken ruim drie uur (de eerste volledige run). Een pagina kost 0,2 tot 0,65 s (schommelt,
+  niet met de diepte); het openen van een lijst ongeveer 1 s. De server handelt parallelle aanvragen af, dus drie tegelijk is
+  ongeveer drie keer sneller: de selectie van 182.000 boeken duurde zo 66 minuten (gemeten, onder belasting en inclusief ongeveer
+  6 minuten plannen) in plaats van 3u12m. `from` en `until` beperken de lijst tot een tijdvak; de planner halveert tijdvakken
   tot ze hooguit `SRC_OAI_WINDOW` records bevatten, en `SRC_OAI_WORKERS` tijdvakken worden tegelijk opgehaald.
 - **`from`/`until` rekenen op hele seconden, de datestamps hebben fracties.** Sluiten twee tijdvakken met een seconde op elkaar aan
   (`[lo, mid]` en `[mid+1s, hi]`), dan valt een record op `mid` + 0,5 s in geen van beide (gevonden: 9 van 63.259). De tijdvakken

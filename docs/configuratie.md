@@ -43,12 +43,13 @@ Elke bron heeft een naam (`books`, `article`) die ook in de bestandsnamen, het m
 | `kind` | `book` | `article` | welke transformatie wordt gebruikt (`book` of `article`) |
 | `api_search` | `priref<200000000 or priref>=300000000` | `priref>=200000000 and priref<300000000` | zoekopdracht in het Adlib-API; alle treffers worden opgehaald |
 | `scope` | `oai` | `oai` | `oai`: alleen records die de OAI-set bevat. `api`: alles wat `api_search` oplevert (alleen voor boeken; artikelen hebben de OAI altijd nodig). |
+| `exclude_priref` | `[[200000000, 299999999]]` | niet ingesteld | priref-bereiken `[van, tot]` in de OAI-selectie die bij een andere bron horen. De OAI-set `books` bevat ook alle tijdschriftartikelen; die worden hier overgeslagen (met reden in `skipped_reasons`) en lopen via de bron `article`. |
 | `oai` | set `books`, prefix `oai_dc_book` | set `article`, prefix `oai_dc` | set en `metadataPrefix` van de OAI |
 | `catalog_url` | `https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}` | idem | sjabloon voor `schema:url` |
 
 `api_search` is afgestemd op de priref-bereiken van de database: de artikelen liggen in 200.000.000 tot 300.000.000, de boeken eromheen.
-Valt een record dat de OAI publiceert buiten die zoekopdracht, dan telt het als "niet in API" en faalt de run. De zoekopdracht
-is dus veilig aan te passen.
+Valt een record dat de OAI publiceert buiten die zoekopdracht, dan telt het als "niet in API" en faalt de run, tenzij het in
+`exclude_priref` staat. De zoekopdracht is dus veilig aan te passen.
 
 ## Kwaliteitsbewaking
 
