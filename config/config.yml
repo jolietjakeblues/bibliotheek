@@ -34,12 +34,15 @@ SRC_BACKOFF: 2.0
 #   api_search  zoekopdracht in het Adlib-API (alle records die erin vallen worden opgehaald)
 #   scope       oai: alleen records die de OAI-set publiceert (de OAI bepaalt wat openbaar is)
 #               api: alles wat api_search oplevert
+#   exclude_priref  [[van, tot], ...] priref's in de OAI-selectie die bij een andere bron horen (worden overgeslagen)
 #   oai         set en metadataPrefix; bij artikelen ook de bron van tijdschrift, jaar en pagina's
 SOURCES:
   books:
     kind: 'book'
     api_search: 'priref<200000000 or priref>=300000000'
     scope: 'oai'
+    # De OAI-set books bevat ook alle tijdschriftartikelen (priref 2e8 tot 3e8, 26.975 stuks); die gaan via de bron article.
+    exclude_priref: [[200000000, 299999999]]
     oai: {set: 'books', prefix: 'oai_dc_book'}
     # link naar het record in de catalogus
     catalog_url: 'https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}'
