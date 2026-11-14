@@ -18,6 +18,10 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
   voorbeeld-SPARQL-query's die op de testrecords worden uitgevoerd.
 
 ### Eerste volledige run (mislukt) en wat eruit volgde
+- De publicatie naar Triply slaagde; alleen de laatste stap, `sync`, faalde met `Service not found`. De dataset gebruikt Speedy en
+  heeft geen service met een eigen naam (de stap was overgenomen uit kunstcollecties-etl). De stap kijkt nu eerst of de dataset een
+  service heeft en slaat de sync over als dat niet zo is (zoals in de beeldbank-ETL). Komt er later een service bij, dan wordt die
+  vanzelf gesynchroniseerd.
 - De run viel na 3u26m om op één record in het API (priref 450004680, tekst `76, 85` in een getalveld). Het API weigert dan de hele
   pagina. Nu wordt zo'n pagina gesplitst tot het ene record overblijft; dat wordt overgeslagen en met priref in het manifest
   genoemd (`MAX_UNREADABLE_IN_API`, nu 10). Een droge run op het hele API liet zien dat er voor de boeken en artikelen verder geen

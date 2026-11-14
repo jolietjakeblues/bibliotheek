@@ -131,6 +131,15 @@ jobs:
         env:
           LDV_API_TOKEN: ${{ secrets.LDV_API_TOKEN }}
         run: |
+          # De dataset gebruikt Speedy en heeft geen eigen SPARQL-service: dan valt er niets te synchroniseren en slaagt deze stap.
+          # Komt er later een service bij (bijvoorbeeld Elasticsearch), dan wordt die hier gesynchroniseerd.
+          services=$(curl --fail-with-body -sS -H "Authorization: Bearer ${LDV_API_TOKEN}" \
+            "${TRIPLY_URL}/datasets/${TRIPLY_ACCOUNT}/${TRIPLY_DATASET}/services")
+          echo "Services: ${services}"
+          if [ "${services}" = "[]" ]; then
+            echo "::notice::Geen SPARQL-service op ${TRIPLY_ACCOUNT}/${TRIPLY_DATASET}, sync overgeslagen."
+            exit 0
+          fi
           curl --fail-with-body -sS -X POST \
             -H "Authorization: Bearer ${LDV_API_TOKEN}" -H 'Content-Type: application/json' \
             "${TRIPLY_URL}/datasets/${TRIPLY_ACCOUNT}/${TRIPLY_DATASET}/services/${TRIPLY_DATASET}" \

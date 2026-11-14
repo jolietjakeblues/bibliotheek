@@ -43,7 +43,7 @@ Een testrun slaat de volledigheidscontrole bewust over (er is immers maar een de
 | `test` | draait alle tests (`pytest`) |
 | `harvest` (twee keer: `books`, `article`) | oogst en transformeert, valideert met SHACL, zet de uitvoer als artifact klaar (`bibliotheek-books`, `bibliotheek-article`) |
 | `publish` | haalt de TriplyDB-CLI op en importeert per bron in een vaste graph; draait alleen zonder `testmode` en met `publish` (of bij de planning) |
-| `sync` | synchroniseert de SPARQL-service van de dataset |
+| `sync` | synchroniseert de service van de dataset, als die er is. De dataset gebruikt Speedy en heeft nu geen service: dan slaagt de stap met een melding. Dezelfde stap als in de beeldbank-ETL. |
 
 Er draait nooit meer dan één run tegelijk (`concurrency`); een tweede run wacht.
 
@@ -110,8 +110,8 @@ Warnings (bijvoorbeeld "Book: schema:author ontbreekt") zijn bekende hiaten in d
 | `Rekenfout: weggeschreven (..) + fouten (..) + niet in API (..) != beoogd (..)` | een bug in de boekhouding | meld het; publiceer niet |
 | `De OAI gaf geen completeListSize` | de OAI-server antwoordt anders dan verwacht | onderzoek de bron |
 | SHACL `Violation: ...` | een record voldoet niet aan de shapes | de melding noemt de eigenschap en een voorbeeld-node; herstel de mapping of de shapes |
+| `Service not found.` in `sync` | er is een service, maar niet met de naam van de dataset | pas de URL in de stap `sync` aan op de naam van de service |
 | Fout in `publish` (Triply) | token ongeldig of verlopen, of de dataset bestaat niet | de stap toont `.triplydb-js.err`; controleer `LDV_API_TOKEN` |
-| Fout in `sync` | de service-naam of het token klopt niet | de stap toont het antwoord van de server |
 
 ### Records in de OAI maar niet in het API
 
