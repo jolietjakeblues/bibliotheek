@@ -25,6 +25,9 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
 - De tweede volledige run viel om op 26.975 records "in de OAI maar niet in het API": de OAI-set `books` bevat ook alle
   tijdschriftartikelen (priref 2e8-3e8). De boekenbron slaat dat bereik nu over (`exclude_priref`) met reden in het manifest. Van
   die artikelen staan er 710 niet in de OAI-set `article`; zie [docs/besluiten.md](docs/besluiten.md).
+- De derde run slaagde in de oogst; SHACL vond één Violation: een boek met pagination `0 p.` kreeg `numberOfPages 0`. Een aantal
+  pagina's wordt nu alleen gezet bij 1 of meer; de tekst blijft in `schema:size`. Alle andere 217.000 boeken en alle artikelen
+  hadden geen Violations.
 - De boekenselectie uit de OAI duurde 3u12m. De OAI-lijst wordt nu in tijdvakken (`from`/`until`) parallel opgehaald
   (`SRC_OAI_WORKERS`, `SRC_OAI_WINDOW`), met controle op elk tijdvak en op het totaal. Gemeten op de echte server: 182.397 records, precies het aangekondigde aantal, in
   66 minuten in plaats van 3u12m. Datestamps hebben fracties van een seconde:

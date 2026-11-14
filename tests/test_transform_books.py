@@ -235,3 +235,14 @@ def test_is_organization():
     assert not ts.is_organization('Wallis de Vries, G.C.')
     assert not ts.is_organization('Bond, J.')              # achternaam die ook een organisatiewoord is
     assert not ts.is_organization('Hugo Kingmans')
+
+
+def test_zero_pages_is_not_a_page_count(config):
+    """Een echt boek had pagination '0 p.': numberOfPages = 0 is een SHACL-Violation (minimaal 1). De tekst blijft staan."""
+    record = ET.fromstring('<record priref="999901" modification="2026-01-01T00:00:00"><priref>999901</priref>'
+                           '<Title><title>Zonder paginas</title></Title><pagination>0 p.</pagination>'
+                           '<illustrations>ill.</illustrations><dimensions>30 cm.</dimensions></record>')
+    graph = Graph()
+    work = ts.transform_book(graph, config, record, config['SOURCES']['books'])
+    assert graph.value(work, SDO.numberOfPages) is None
+    assert str(graph.value(work, SDO.size)) == '0 p. ; ill. ; 30 cm.'

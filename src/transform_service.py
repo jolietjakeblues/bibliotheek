@@ -271,7 +271,7 @@ def transform_book(graph: Graph, config: dict, record, source: dict) -> URIRef:
         graph.add((work, SDO.size, Literal(' ; '.join(extent), datatype=XSD.string)))
         pages = adlib.first(record, 'pagination')
         m = _PAGES_ONLY.match(pages) if pages else None
-        if m:
+        if m and int(m.group(1)) > 0:          # '0 p.' (gevonden in een echt boek) is geen aantal; de tekst blijft in schema:size
             graph.add((work, SDO.numberOfPages, Literal(int(m.group(1)), datatype=XSD.integer)))
     for edition in adlib.texts(record, 'edition'):
         graph.add((work, SDO.bookEdition, Literal(edition, lang='nl')))
