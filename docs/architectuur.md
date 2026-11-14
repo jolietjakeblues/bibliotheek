@@ -17,7 +17,7 @@ flowchart LR
     T --> C["JSON-LD chunks<br/>+ manifest"]
     C --> V["validate_service<br/>SHACL"]
     V -->|geen Violations| P["TriplyDB CLI<br/>import per graph"]
-    P --> S["sync<br/>SPARQL-service"]
+    P --> S["sync<br/>alleen als er een service is"]
     S --> LDV[("Linked Data Voorziening<br/>rce/bibliotheek")]
 ```
 
@@ -103,7 +103,7 @@ Per bron één vaste graph in `rce/bibliotheek`:
 | artikelen | `https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/graphs/article` |
 
 Het eerste bestand van een bron gaat met `--mode overwrite` (vervangt de graph van de vorige run), de overige met `--mode merge`. Er
-loopt dus niets op. Tijdens het publiceren is een graph kort onvolledig. Daarna volgt een `sync` van de SPARQL-service.
+loopt dus niets op. Tijdens het publiceren is een graph kort onvolledig. Daarna volgt een `sync`, maar alleen als de dataset een eigen service heeft. Nu niet (Speedy); dan slaagt de stap met een melding.
 
 > De namen `books` en `article` volgen de bronnamen in `config/config.yml`.
 

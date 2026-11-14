@@ -96,7 +96,7 @@ De shapes (`shacl/bibliotheek.shacl.ttl`) volgen de conventies van het
 
 `.github/workflows/harvest_bibliotheek.yml` draait elke **maandag 03:00 UTC** en is ook handmatig te starten, met een testmodus die
 niets publiceert. Vereist het secret `LDV_API_TOKEN`. Stappen: tests → oogst en SHACL per bron (parallel) → publicatie per graph
-(`--mode overwrite`, daarna `merge`) → synchronisatie. **Let op:** de planning publiceert direct. Start de eerste keer handmatig met
+(`--mode overwrite`, daarna `merge`) → synchronisatie (alleen als de dataset een service heeft). **Let op:** de planning publiceert direct. Start de eerste keer handmatig met
 `testmode` aan, en daarna een volledige run met `publish` uit; zie [docs/beheer.md](docs/beheer.md).
 
 De dataset bevat al een oudere conversie in andere graphs (`bib`, `bib-series`, ...). Die worden niet aangeraakt; oud en nieuw zijn
