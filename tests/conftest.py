@@ -41,19 +41,12 @@ def books_graph(config):
 
 
 @pytest.fixture
-def build_articles(config, monkeypatch):
-    """Artikelen: OAI-fixture (tijdschrift, pagina's) en optioneel de API-fixture (titel, onderwerpen)."""
-    def _build(with_api: bool = True):
-        root = ET.fromstring((FIXTURES / 'article_page.xml').read_text(encoding='utf-8'))
-        monkeypatch.setattr(oai_client, 'fetch_and_parse', lambda *a, **k: root)
-        source = config['SOURCES']['article']
-        api = api_records('api_articles.xml') if with_api else {}
+def build_articles(config):
+    """Alle echte artikelrecords uit tests/fixtures/api_articles.xml (API-alias `article`), getransformeerd."""
+    def _build():
         graph = uris.get_dataset(config)
-        for header, element in oai_client.iter_records('http://example.org/oai', 'article', 'oai_dc', {},
-                                                       sleep_between=0):
-            priref = transform_service.record_priref(header['identifier'])
-            transform_service.transform_article(graph, config, header, transform_service.collect_fields(element),
-                                                source, api.get(priref))
+        for record in api_records('api_articles.xml').values():
+            transform_service.transform_article(graph, config, record, config['SOURCES']['article'])
         return graph
     return _build
 

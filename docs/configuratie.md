@@ -19,7 +19,7 @@ elke sleutel in het bestand hier voorkomt.
 | Sleutel | Waarde nu | Betekenis |
 |---|---|---|
 | `SRC_API` | `https://rce.adlibhosting.com/harvest/wwwopac.ashx` | adres van het API |
-| `SRC_API_DATABASE` | `books` | databasenaam in de aanroep. Alle namen die werken (`books`, `article`, `document`) verwijzen naar dezelfde database. |
+| `SRC_API_DATABASE` | `books` | standaard-alias in de aanroep. De records zijn voor alle aliassen dezelfde, maar elke alias geeft een andere lijst velden terug (`books` 16, `article` 55). Een bron kan met `api_database` een andere alias kiezen. |
 | `SRC_API_LIMIT` | `500` | records per pagina; een pagina duurt 5 tot 17 seconden |
 | `SRC_API_WORKERS` | `3` | pagina's die tegelijk worden opgehaald. Een lagere waarde is vriendelijker voor de server, maar trager. |
 
@@ -41,6 +41,8 @@ Elke bron heeft een naam (`books`, `article`) die ook in de bestandsnamen, het m
 | Sleutel per bron | `books` | `article` | Betekenis |
 |---|---|---|---|
 | `kind` | `book` | `article` | welke transformatie wordt gebruikt (`book` of `article`) |
+| `api_database` | niet ingesteld (dus `SRC_API_DATABASE`) | `archrep` | API-alias voor deze bron. De alias bepaalt welke velden terugkomen, en bij een oogst zijn dat er minder dan bij één record. `archrep` geeft alle velden (`*`); `article` geeft in een oogst geen `lead_word`, CHT-koppelingen of `source.title.lref`. |
+| `api_fields` | niet ingesteld (alle standaardvelden van de alias) | lijst van 26 velden | de velden die uit het API worden opgevraagd (`fields=`). Alleen wat in de mapping wordt gebruikt; interne velden verlaten de server zo niet. Een veld dat hier ontbreekt, ontbreekt in de data. |
 | `api_search` | `priref<200000000 or priref>=300000000` | `priref>=200000000 and priref<300000000` | zoekopdracht in het Adlib-API; alle treffers worden opgehaald |
 | `scope` | `oai` | `oai` | `oai`: alleen records die de OAI-set bevat. `api`: alles wat `api_search` oplevert (alleen voor boeken; artikelen hebben de OAI altijd nodig). |
 | `exclude_priref` | `[[200000000, 299999999]]` | niet ingesteld | priref-bereiken `[van, tot]` in de OAI-selectie die bij een andere bron horen. De OAI-set `books` bevat ook alle tijdschriftartikelen; die worden hier overgeslagen (met reden in `skipped_reasons`) en lopen via de bron `article`. |
@@ -57,6 +59,7 @@ Valt een record dat de OAI publiceert buiten die zoekopdracht, dan telt het als 
 |---|---|---|
 | `MAX_RECORD_ERRORS` | `0` | aantal records dat bij de transformatie mag falen voordat de run mislukt |
 | `MAX_MISSING_IN_API` | `0` | aantal records dat de OAI publiceert maar het API niet kent, voordat de run mislukt |
+| `MAX_UNLINKED_JOURNAL_PERCENT` | `2` | percentage artikelen met een tijdschrift zonder `source.title.lref` waarbij de run mislukt. Gemeten: 0%. Bewaakt dat de API-alias het adres van het tijdschrift teruggeeft. |
 | `MAX_UNREADABLE_IN_API` | `10` | aantal te publiceren records dat het API zelf niet kan uitleveren omdat het record in de bron fout staat (zie [beheer.md](beheer.md)); zulke records worden overgeslagen en met priref in het manifest genoemd. `0` laat de run bij het eerste kapotte record falen. |
 
 ## Organisatie

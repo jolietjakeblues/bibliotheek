@@ -1,0 +1,1022 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<webConfiguration>
+<!-- 452 changes
+ Section: databaseConfiguration,  in brieffields for document, Field name 'other_number.type' not found in 'document' 
+  Section: databaseConfiguration,  in brieffields for document, Field name 'other_number.content' not found in 'document' 
+   Section: databaseConfiguration,  in brieffields for document, Field name 'ISBN' not found in 'document' 
+    Section: databaseConfiguration,  in detailfields for document, Field name 'other_number.type' not found in 'document' 
+	 Section: databaseConfiguration,  in detailfields for document, Field name 'other_number.content' not found in 'document' 
+	  Section: databaseConfiguration,  in detailfields for document, Field name 'ISBN' not found in 'document' 
+	   Section: databaseConfiguration,  in brieffields for rapporten, Field name 'ISBN' not found in 'document' 
+	    Section: databaseConfiguration,  in brieffields for rapporten, Field name 'other_number.content' not found in 'document' 
+		 Section: databaseConfiguration,  in brieffields for rapporten, Field name 'other_number.type' not found in 'document' 
+		  Section: databaseConfiguration,  in detailfields for rapporten, Field name 'ISBN' not found in 'document' 
+		   Section: databaseConfiguration,  in detailfields for rapporten, Field name 'other_number.content' not found in 'document' 
+		    Section: databaseConfiguration,  in detailfields for rapporten, Field name 'other_number.type' not found in 'document' 
+			 Section: databaseConfiguration,  in searchfields for rapporten, Field name 'ISBN' not found in 'document' 
+			  Section: databaseConfiguration,  in searchfields for rapporten, Field name 'other_number.content' not found in 'document' 
+			   Section: databaseConfiguration,  in searchfields for rapporten, Field name 'other_number.type' not found in 'document' 
+			    Section: databaseConfiguration,  in brieffields for 1970, Field name 'ISBN' not found in 'document' 
+				 Section: databaseConfiguration,  in brieffields for desiderata, Field name 'ISBN' not found in 'document' 
+				  Section: databaseConfiguration,  in brieffields for desiderata, Field name 'other_number.content' not found in 'document' 
+   Section: databaseConfiguration,  in brieffields for desiderata, Field name 'other_number.type' not found in 'document' 
+    Section: databaseConfiguration,  in detailfields for desiderata, Field name 'ISBN' not found in 'document' 
+      Section: databaseConfiguration,  in detailfields for desiderata, Field name 'other_number.content' not found in 'document' 
+	    Section: databaseConfiguration,  in detailfields for desiderata, Field name 'other_number.type' not found in 'document' 
+
+ -->
+  <!-- ======================================================================================= -->
+  <!-- Global settings -->
+  <!-- ======================================================================================= -->
+  <globalConfiguration>
+    <databasepath>G:\Adlib\Model application 4.5.2.a\data</databasepath>
+    <xmltype>grouped</xmltype>
+  </globalConfiguration>
+  <!-- ======================================================================================= -->
+  <!-- OAI Configuration -->
+  <!-- ======================================================================================= -->
+  <OAIConfiguration>
+    <OAI_REPOSITORY_NAME>Rijksdienst voor het Cultureel Erfgoed</OAI_REPOSITORY_NAME>
+    <OAI_ADMIN_EMAIL>V.Slootjes@cultureelerfgoed.nl</OAI_ADMIN_EMAIL>
+    <OAI_REPOSITORY_IDENTIFIER>RCE</OAI_REPOSITORY_IDENTIFIER>
+    <OAI_DELIMITER>:</OAI_DELIMITER>
+    <!-- ======================================================================================= -->
+    <!-- OAI Sets -->
+    <!-- ======================================================================================= -->
+    <OAI_SETS>
+      <OAI_SET>
+        <SetSpec>document</SetSpec>
+        <Name>document</Name>
+        <Database>document</Database>
+        <SearchStatement>all</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+          <OAI_METADATAPREFIX>
+            <Name>oai_datacite</Name>
+            <StyleSheet>adlib_datacite_v23.xslt</StyleSheet>
+            <Schema>http://schema.datacite.org/meta/kernel-4/metadata.xsd</Schema>
+            <MetadataNamespace>http://datacite.org/schema/kernel-4</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>collect</SetSpec>
+        <Name>collect</Name>
+        <Database>collect</Database>
+        <SearchStatement>all</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+          <OAI_METADATAPREFIX>
+            <Name>oai_datacite</Name>
+            <StyleSheet>adlib_datacite_v23.xslt</StyleSheet>
+            <Schema>http://schema.datacite.org/meta/kernel-4/metadata.xsd</Schema>
+            <MetadataNamespace>http://datacite.org/schema/kernel-4</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+
+      <OAI_SET>
+        <SetSpec>objects</SetSpec>
+        <Name>Museum objects</Name>
+        <Database>objects</Database>
+        <SearchStatement>all</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>books</SetSpec>
+        <Name>Books</Name>
+        <Database>1964</Database>
+        <SearchStatement>pointer 1964</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc_book</Name>
+            <StyleSheet>oai_dc_book.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+
+      <OAI_SET>
+        <SetSpec>archrep</SetSpec>
+        <Name>Archrep</Name>
+        <Database>document</Database>
+        <SearchStatement>pointer 2019</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc_v35b.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+          <OAI_METADATAPREFIX>
+            <Name>oai_datacite</Name>
+            <StyleSheet>adlib_datacite_v23.xslt</StyleSheet>
+            <Schema>http://schema.datacite.org/meta/kernel-4/metadata.xsd</Schema>
+            <MetadataNamespace>http://datacite.org/schema/kernel-4</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>archkb</SetSpec>
+        <Name>Archkb</Name>
+        <Database>document</Database>
+        <SearchStatement>pointer 2018</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc_v35b.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+          <OAI_METADATAPREFIX>
+            <Name>oai_datacite</Name>
+            <StyleSheet>adlib_datacite_v23.xslt</StyleSheet>
+            <Schema>http://schema.datacite.org/meta/kernel-4/metadata.xsd</Schema>
+            <MetadataNamespace>http://datacite.org/schema/kernel-4</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>lelystad</SetSpec>
+        <Name>Lelystad</Name>
+        <Database>document</Database>
+        <SearchStatement>pointer 2020</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc_v35b.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+            <!--		<StyleSheet>oai_dc_book</StyleSheet> 
+				<Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+				<MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace> -->
+          </OAI_METADATAPREFIX>
+          <OAI_METADATAPREFIX>
+            <Name>oai_datacite</Name>
+            <StyleSheet>adlib_datacite_v23.xslt</StyleSheet>
+            <Schema>http://schema.datacite.org/meta/kernel-4/metadata.xsd</Schema>
+            <MetadataNamespace>http://datacite.org/schema/kernel-4</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <!--		<OAI_SET>
+		<SetSpec>document:archkb</SetSpec>
+		<Name>document:Archkb</Name>
+		<Database>document</Database>
+		<SearchStatement>desiderata</SearchStatement>
+		<OAI_METADATAPREFIXES>
+			<OAI_METADATAPREFIX>
+				<Name>oai_dc</Name>
+				<StyleSheet>oai_dc_v35b.xslt</StyleSheet>
+				<Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+				<MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+			</OAI_METADATAPREFIX>
+						<OAI_METADATAPREFIX>
+				<Name>oai_datacite</Name>
+				<StyleSheet>adlib_datacite_v22.xslt</StyleSheet>
+				<Schema>http://schema.datacite.org/meta/kernel-4/metadata.xsd</Schema>
+				<MetadataNamespace>http://datacite.org/schema/kernel-4</MetadataNamespace>
+			</OAI_METADATAPREFIX>
+		</OAI_METADATAPREFIXES>
+		</OAI_SET>
+-->
+
+      <OAI_SET>
+        <SetSpec>molens</SetSpec>
+        <Name>Molens</Name>
+        <Database>1002</Database>
+        <SearchStatement>pointer 1002</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>fotos</SetSpec>
+        <Name>Fotos</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 1009</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>images</SetSpec>
+        <Name>Images</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 1009</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>fotosfriesland</SetSpec>
+        <Name>Fotosfriesland</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 99</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>fotosrein</SetSpec>
+        <Name>Fotos</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 2004</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>TG</SetSpec>
+        <Name>Fotostg</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 2003</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_gt_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>BR</SetSpec>
+        <Name>Fotostg</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 2006</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_gt_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>amsterdam</SetSpec>
+        <Name>Amsterdam</Name>
+        <Database>collect</Database>
+        <SearchStatement>pointer 2008</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai_dc.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>adlib</SetSpec>
+        <Name>Museum objects</Name>
+        <Database>collect</Database>
+        <SearchStatement>all</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_adlib</Name>
+            <!--  use oai_adlib.xslt as stylesheet if you want adlibXML as output  -->
+            <StyleSheet>oai_adlib.xslt</StyleSheet>
+            <Schema>http://www.adlibsoft.com/adlibXML.xsd</Schema>
+            <MetadataNamespace>http://www.adlibsoft.com/adlibXML/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+      <OAI_SET>
+        <SetSpec>article</SetSpec>
+        <Name>Article</Name>
+        <Database>1970</Database>
+        <SearchStatement>pointer 1970</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+            <Name>oai_dc</Name>
+            <StyleSheet>oai-bibtex.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+
+
+      <OAI_SET>
+        <SetSpec>marcoclc</SetSpec>
+        <Name>marc</Name>
+        <Database>marc</Database>
+        <SearchStatement>pointer 9999</SearchStatement>
+        <OAI_METADATAPREFIXES>
+          <OAI_METADATAPREFIX>
+           <Name>marc21</Name>
+			<!-- <StyleSheet>oai_adlib.xslt</StyleSheet> -->
+		    <StyleSheet>Marc21.xslt</StyleSheet>
+            <Schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</Schema>
+            <MetadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</MetadataNamespace>
+          </OAI_METADATAPREFIX>
+        </OAI_METADATAPREFIXES>
+      </OAI_SET>
+    </OAI_SETS>
+
+  </OAIConfiguration>
+
+  <databaseConfiguration database = "collect">
+    <database>collect</database>
+    <brieffields>
+      <field>collection</field>
+      <field>title</field>
+      <field>description</field>
+      <field>object_name</field>
+      <field>object_name.type</field>
+      <field>technique</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>reproduction.format</field>
+      <field>priref</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+      <field>monument.country</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.house_number</field>
+      <field>monument.house_number.addition</field>
+      <field>monument.street</field>
+      <field>monument.zipcode</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <!--	<field>complex_number</field>  -->
+      <field>creative_commons</field>
+      <field>rights.notes</field>
+      <field>rights.holder</field>
+      <field>content.subject</field>
+      <field>content.subject.type</field>
+      <field>RNA_URI</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </brieffields>
+    <detailfields>
+      <field>collection</field>
+      <field>title</field>
+      <field>description</field>
+      <field>object_name</field>
+      <field>object_name.type</field>
+      <field>technique</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>reproduction.format</field>
+      <field>priref</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>rights.notes</field>
+      <field>rights.holder</field>
+      <field>monument.record_number</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+      <field>monument.country</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.house_number</field>
+      <field>monument.house_number.addition</field>
+      <field>monument.street</field>
+      <field>monument.zipcode</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <!--		<field>complex_number</field>  -->
+      <field>creative_commons</field>
+      <field>content.subject</field>
+      <field>content.subject.type</field>
+      <field>RNA_URI</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "monument">
+    <database>monument</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "objects">
+    <database>collect&gt;intern</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "document">
+    <database>document</database>
+    <brieffields>
+      <field>year_of_publication</field>
+      <field>title</field>
+      <field>statement_of_responsibility</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>series.lead_word</field>
+      <field>series.ISSN</field>
+      <field>search_year</field>
+      <field>priref</field>
+      <field>publisher</field>
+      <field>place_of_publication_2</field>
+      <field>pagination</field>
+      <field>notes</field>
+      <field>material_type</field>
+      <field>lead_word</field>
+      <field>language_code</field>
+      <field>keyword.contents</field>
+      <field>input.date</field>
+      <field>illustrations</field>
+      <field>geographical_keyword</field>
+      <field>edit.date</field>
+      <field>digital_reference</field>
+      <field>corporate_author</field>
+      <field>copy.shelfmark</field>
+      <field>author.name</field>
+      <field>archeology.research_type</field>
+      <field>archeology.regio</field>
+      <field>archeology.period</field>
+      <field>archeology.complex_type</field>
+      <field>acquisition_date</field>
+      <field>abstract</field>
+      <field>copy.number</field>
+      <field>copy.shelfmark</field>
+	  <field>isbn</field>
+      <field>ISSN</field>
+	  <field>class_number</field>
+      <field>class_number.schema</field>
+    </brieffields>
+    <detailfields>
+      <field>priref</field>
+      <field>year_of_publication</field>
+      <field>title</field>
+      <field>statement_of_responsibility</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>series.lead_word</field>
+      <field>series.ISSN</field>
+      <field>search_year</field>
+      <field>publisher</field>
+      <field>place_of_publication_2</field>
+      <field>pagination</field>
+      <field>notes</field>
+      <field>material_type</field>
+      <field>lead_word</field>
+      <field>language_code</field>
+      <field>keyword.contents</field>
+      <field>input.date</field>
+      <field>illustrations</field>
+      <field>geographical_keyword</field>
+      <field>edit.date</field>
+      <field>digital_reference</field>
+      <field>corporate_author</field>
+      <field>copy.shelfmark</field>
+      <field>author.name</field>
+      <field>archeology.research_type</field>
+      <field>archeology.regio</field>
+      <field>archeology.period</field>
+      <field>archeology.complex_type</field>
+      <field>acquisition_date</field>
+      <field>abstract</field>
+      <field>copy.number</field>
+      <field>copy.shelfmark</field>
+      <field>isbn</field>
+      <field>ISSN</field>
+	  <field>class_number</field>
+      <field>class_number.schema</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "people">
+    <database>people</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "1002">
+    <database>collect</database>
+    <brieffields>
+      <field>collection</field>
+      <field>title</field>
+      <field>description</field>
+      <field>object_name</field>
+      <field>object_name.type</field>
+      <field>technique</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>reproduction.format</field>
+      <field>priref</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+      <field>monument.country</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.house_number</field>
+      <field>monument.house_number.addition</field>
+      <field>monument.street</field>
+      <field>monument.zipcode</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <!--		<field>geographical_keyword</field>
+		<field>complex_number</field>  -->
+      <field>creative_commons</field>
+      <field>rights.notes</field>
+      <field>rights.holder</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </brieffields>
+    <detailfields>
+      <field>collection</field>
+      <field>title</field>
+      <field>description</field>
+      <field>object_name</field>
+      <field>object_name.type</field>
+      <field>technique</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>reproduction.format</field>
+      <field>priref</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>rights.notes</field>
+      <field>rights.holder</field>
+      <field>monument.record_number</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+      <field>monument.country</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.house_number</field>
+      <field>monument.house_number.addition</field>
+      <field>monument.street</field>
+      <field>monument.zipcode</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <!--		<field>geographical_keyword</field>
+		<field>complex_number</field>  -->
+      <field>creative_commons</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "book">
+    <database>document</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "1964">
+    <database>document</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "rapporten">
+    <database>document&gt;rapporten</database>
+    <brieffields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>statement_of_responsibility</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>year_of_publication</field>
+      <field>archeology.complex_type</field>
+      <field>archeology.period</field>
+      <field>archeology.research_type</field>
+      <field>acquisition_date</field>
+      <field>language_code</field>
+      <field>series.ISSN</field>
+      <field>archeology.regio</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>abstract</field>
+      <field>lead_word</field>
+      <field>series.lead_word</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>digital_reference</field>
+    </brieffields>
+    <detailfields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>statement_of_responsibility</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>year_of_publication</field>
+      <field>archeology.complex_type</field>
+      <field>archeology.period</field>
+      <field>archeology.research_type</field>
+      <field>acquisition_date</field>
+      <field>language_code</field>
+      <field>series.ISSN</field>
+      <field>archeology.regio</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>abstract</field>
+      <field>lead_word</field>
+      <field>series.lead_word</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>digital_reference</field>
+    </detailfields>
+    <searchfields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>statement_of_responsibility</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>year_of_publication</field>
+      <field>archeology.complex_type</field>
+      <field>archeology.period</field>
+      <field>archeology.research_type</field>
+      <field>acquisition_date</field>
+      <field>language_code</field>
+      <field>series.ISSN</field>
+      <field>archeology.regio</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>abstract</field>
+      <field>lead_word</field>
+      <field>series.lead_word</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>digital_reference</field>
+      <!--<field>*</field> -->
+    </searchfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "1970">
+    <database>document&gt;article</database>
+    <brieffields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>place_of_publication_2</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>copy.shelfmark</field>
+      <field>material_type</field>
+      <field>source.material_type</field>
+      <field>source.title</field>
+      <field>source.title.lead_word</field>
+      <field>source.volume</field>
+      <field>source.publication_years</field>
+      <field>source.issue</field>
+      <field>source.pagination</field>
+      <field>source.notes</field>
+      <field>abstract</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+
+<!--  <databaseConfiguration database = "marc">
+    <database>document</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration> -->
+  
+   <databaseConfiguration database = "marc">
+    <database>document</database>
+    <brieffields>
+	  <field>abstract</field>
+	  <field>acquisition_date</field>
+	  <field>author.name</field>
+	  <field>author.role</field>
+	  <field>class_number.schema</field>
+	  <field>class_number</field>
+	  <field>copy.number</field>
+	  <field>copy.shelfmark</field>
+	  <field>corporate_author.role</field>
+	  <field>corporate_author</field>
+	  <field>digital_reference</field>
+	  <field>edit.date</field>
+	  <field>edition</field>
+	  <field>geographical_keyword</field>
+	  <field>illustrations</field>
+	  <field>illustrator.name</field>
+	  <field>illustrator.role</field>
+	  <field>input.date</field>
+	  <field>isbn</field>
+	  <field>ISSN</field>
+	  <field>keyword.contents</field>
+	  <field>language_code</field>
+	  <field>lead_word</field>
+	  <field>material_type</field>
+	  <field>notes</field>
+	  <field>pagination</field>
+	  <field>person.keyword.name</field>
+	  <field>person.keyword.role</field>
+	  <field>person.keyword.type</field>
+	  <field>place_of_publication_2</field>
+	  <field>priref</field>
+	  <field>publisher</field>
+	  <field>search_year</field>
+	  <field>series.ISSN</field>
+	  <field>series.lead_word</field>
+	  <field>series.number</field>
+	  <field>series.title</field>
+	  <field>shelf_mark</field>
+	  <field>source.issue</field>
+	  <field>source.pagination</field>
+	  <field>source.title.lead_word</field>
+	  <field>source.title</field>
+	  <field>source.volume</field>
+	  <field>statement_of_responsibility</field>
+	  <field>subseries.ISSN</field>
+	  <field>subseries.lead_word</field>
+	  <field>subseries.number</field>
+	  <field>subseries.title</field>
+	  <field>title</field>
+	  <field>Title_variation</field>
+	  <field>year_of_publication</field>
+    </brieffields>
+    <detailfields>
+	  <field>abstract</field>
+	  <field>acquisition_date</field>
+	  <field>author.name</field>
+	  <field>author.role</field>
+	  <field>class_number.schema</field>
+	  <field>class_number</field>
+	  <field>copy.number</field>
+	  <field>copy.shelfmark</field>
+	  <field>corporate_author.role</field>
+	  <field>corporate_author</field>
+	  <field>digital_reference</field>
+	  <field>edit.date</field>
+	  <field>edition</field>
+	  <field>geographical_keyword</field>
+	  <field>illustrations</field>
+	  <field>illustrator.name</field>
+	  <field>illustrator.role</field>
+	  <field>input.date</field>
+	  <field>isbn</field>
+	  <field>ISSN</field>
+	  <field>keyword.contents</field>
+	  <field>language_code</field>
+	  <field>lead_word</field>
+	  <field>material_type</field>
+	  <field>notes</field>
+	  <field>pagination</field>
+	  <field>person.keyword.name</field>
+	  <field>person.keyword.role</field>
+	  <field>person.keyword.type</field>
+	  <field>place_of_publication_2</field>
+	  <field>priref</field>
+	  <field>publisher</field>
+	  <field>search_year</field>
+	  <field>series.ISSN</field>
+	  <field>series.lead_word</field>
+	  <field>series.number</field>
+	  <field>series.title</field>
+	  <field>shelf_mark</field>
+	  <field>source.issue</field>
+	  <field>source.pagination</field>
+	  <field>source.title.lead_word</field>
+	  <field>source.title</field>
+	  <field>source.volume</field>
+	  <field>statement_of_responsibility</field>
+	  <field>subseries.ISSN</field>
+	  <field>subseries.lead_word</field>
+	  <field>subseries.number</field>
+	  <field>subseries.title</field>
+	  <field>title</field>
+	  <field>Title_variation</field>
+	  <field>year_of_publication</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database = "desiderata">
+    <database>document&gt;desiderata</database>
+    <brieffields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>statement_of_responsibility</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>contributor</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>year_of_publication</field>
+      <field>archeology.complex_type</field>
+      <field>archeology.period</field>
+      <field>archeology.research_type</field>
+      <field>acquisition_date</field>
+      <field>language_code</field>
+      <field>series.ISSN</field>
+      <field>archeology.regio</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>abstract</field>
+      <!--			<field>monument.number</field>
+			<field>monument.name</field>
+			<field>monument.country</field>
+			<field>monument.province</field>
+			<field>monument.county</field>
+			<field>monument.place</field>
+			<field>monument.house_number</field>
+			<field>monument.street</field> -->
+      <field>lead_word</field>
+      <field>series.lead_word</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>digital_reference</field>
+    </brieffields>
+    <detailfields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>statement_of_responsibility</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>year_of_publication</field>
+      <field>archeology.complex_type</field>
+      <field>archeology.period</field>
+      <field>archeology.research_type</field>
+      <field>acquisition_date</field>
+      <field>language_code</field>
+      <field>series.ISSN</field>
+      <field>archeology.regio</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>abstract</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+      <field>monument.country</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.house_number</field>
+      <field>monument.street</field>
+      <field>lead_word</field>
+      <field>series.lead_word</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>digital_reference</field>
+    </detailfields>
+  </databaseConfiguration>
+
+</webConfiguration>

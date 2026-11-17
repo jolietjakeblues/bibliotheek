@@ -71,10 +71,12 @@ def _setup(monkeypatch, tmp_path, source, ids, oai_announced=None, api_ids=None,
         verb = 'ListIdentifiers' if 'ListIdentifiers' in url else 'ListRecords'
         return ET.fromstring(next(pages[verb]))
 
-    def fake_api(base, database, search, start, limit, retries=5, backoff=2.0):
+    def fake_api(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
         hits = len(api_ids) if api_hits is None else api_hits
         records = ''.join(f'<record priref="{i}" modification="2026-01-01T00:00:00"><priref>{i}</priref>'
-                          f'<Title><title>Titel {i}</title></Title></record>' for i in api_ids[start - 1:start - 1 + limit])
+                          f'<Title><title>Titel {i}</title></Title><Source><source.title>Tijdschrift</source.title>'
+                          f'<source.title.lref>400000001</source.title.lref></Source></record>'
+                          for i in api_ids[start - 1:start - 1 + limit])
         return ET.fromstring(f'<adlibXML><recordList>{records}</recordList><diagnostic><hits>{hits}</hits></diagnostic></adlibXML>')
 
     monkeypatch.setattr(oai_client, 'fetch_and_parse', fake_oai)
@@ -154,8 +156,8 @@ def _unreadable(monkeypatch, bad):
     """Laat het API-record(s) `bad` niet leveren, zoals de echte server bij priref 450004680 (daarna splitst de client de pagina)."""
     fake = adlib_client.fetch_page
 
-    def picky(base, database, search, start, limit, retries=5, backoff=2.0):
-        page = fake(base, database, search, start, limit, retries, backoff)
+    def picky(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
+        page = fake(base, database, search, start, limit, retries, backoff, fields)
         hit = [r.get('priref') for r in page.findall('.//record') if int(r.get('priref')) in bad]
         if hit:
             raise adlib_client.AdlibError(f"Invalid integer value '76, 85' for Field 't3', record number {hit[0]}")
@@ -207,7 +209,7 @@ def test_unreadable_record_outside_the_selection_is_harmless(monkeypatch, tmp_pa
 def test_unreadable_without_record_in_the_error_is_not_swallowed(monkeypatch, tmp_path):
     _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26))
 
-    def broken(base, database, search, start, limit, retries=5, backoff=2.0):
+    def broken(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
         raise adlib_client.AdlibError('Er ging iets mis')
 
     monkeypatch.setattr(adlib_client, 'fetch_page', broken)
@@ -267,40 +269,126 @@ def test_limited_run_skips_completeness_check(monkeypatch, tmp_path):
 
 # --- artikelen ------------------------------------------------------------
 
-def test_articles_are_merged_with_api_title(monkeypatch, tmp_path):
+def article_data(tmp_path):
+    return ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('article-*.jsonld'))
+
+
+def test_articles_come_completely_from_the_api(monkeypatch, tmp_path):
     _setup(monkeypatch, tmp_path, 'article', ids=range(200000001, 200000013))
     assert run('article') == 0
     m = manifest(tmp_path, 'article')
-    assert m['written'] == 12 and m['missing_in_api'] == 0
-    data = ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('article-*.jsonld'))
-    assert 'Titel 200000001' in data and 'Tijdschrift' in data           # titel uit het API, tijdschrift uit de OAI
+    assert m['written'] == 12 and m['missing_in_api'] == 0 and m['complete'] is True
+    data = article_data(tmp_path)
+    assert 'Titel 200000001' in data and 'Tijdschrift' in data           # titel en tijdschrift uit hetzelfde API-record
 
 
-def test_article_missing_in_api_is_written_from_oai_but_fails_the_run(monkeypatch, tmp_path):
+def test_articles_use_the_api_alias_and_fields_of_the_source(monkeypatch, tmp_path):
+    seen = []
+    _setup(monkeypatch, tmp_path, 'article', ids=range(200000001, 200000006))
+    fake = adlib_client.fetch_page
+
+    def spy(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
+        seen.append((database, fields))
+        return fake(base, database, search, start, limit, retries, backoff, fields)
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', spy)
+    assert run('article') == 0
+    assert {d for d, _ in seen} == {'archrep'}                 # niet 'article' of 'books': die geven in een oogst te weinig velden
+    fields = {f for _, f in seen}
+    assert len(fields) == 1
+    (fields,) = fields
+    assert 'source.title.lref' in fields.split(',') and 'lead_word' in fields.split(',')
+    for internal in ('Edit', 'shelf_mark', 'record_access.owner', 'input.name'):
+        assert internal not in fields.split(',')               # interne velden worden niet eens opgevraagd
+
+
+def test_books_ask_for_no_specific_fields(monkeypatch, tmp_path):
+    seen = []
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 6))
+    fake = adlib_client.fetch_page
+
+    def spy(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
+        seen.append((database, fields))
+        return fake(base, database, search, start, limit, retries, backoff, fields)
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', spy)
+    assert run('books') == 0
+    assert {(d, f) for d, f in seen} == {('books', None)}
+
+
+def test_run_fails_when_the_api_alias_does_not_return_the_journal_address(monkeypatch, tmp_path):
+    """Gevonden bij de eerste droge run: de alias `article` geeft in een oogst geen `source.title.lref`."""
+    _setup(monkeypatch, tmp_path, 'article', ids=range(200000001, 200000011))
+    fake = adlib_client.fetch_page
+
+    def without_lref(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
+        page = fake(base, database, search, start, limit, retries, backoff, fields)
+        for src in page.iter('Source'):
+            for el in list(src.findall('source.title.lref')):
+                src.remove(el)
+        return page
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', without_lref)
+    assert run('article') == 1
+    m = manifest(tmp_path, 'article')
+    assert m['with_journal'] == 10 and m['journal_without_link'] == 10 and m['complete'] is False
+
+
+def test_a_few_journals_without_an_address_are_allowed(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'article', ids=range(200000001, 200000201), MAX_UNLINKED_JOURNAL_PERCENT=2)
+    fake = adlib_client.fetch_page
+
+    def one_without(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
+        page = fake(base, database, search, start, limit, retries, backoff, fields)
+        for rec in page.findall('.//record'):
+            if rec.get('priref') == '200000007':
+                for src in rec.iter('Source'):
+                    for el in list(src.findall('source.title.lref')):
+                        src.remove(el)
+        return page
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', one_without)
+    assert run('article') == 0
+    assert manifest(tmp_path, 'article')['journal_without_link'] == 1                  # 0,5% van 200
+
+
+def test_articles_only_need_the_oai_headers(monkeypatch, tmp_path):
+    verbs = []
+    _setup(monkeypatch, tmp_path, 'article', ids=range(200000001, 200000006))
+    fake = oai_client.fetch_and_parse
+
+    def spy(url, *a, **k):
+        verbs.append('ListIdentifiers' if 'ListIdentifiers' in url else 'ListRecords')
+        return fake(url, *a, **k)
+
+    monkeypatch.setattr(oai_client, 'fetch_and_parse', spy)
+    assert run('article') == 0
+    assert set(verbs) == {'ListIdentifiers'}
+
+
+def test_article_missing_in_api_is_not_written_and_fails_the_run(monkeypatch, tmp_path):
     ids = list(range(200000001, 200000011))
     _setup(monkeypatch, tmp_path, 'article', ids=ids, api_ids=[i for i in ids if i != 200000004])
     assert run('article') == 1
     m = manifest(tmp_path, 'article')
-    assert m['missing_in_api'] == 1 and m['missing_ids'] == ['200000004'] and m['written'] == 10
+    assert m['missing_in_api'] == 1 and m['missing_ids'] == ['200000004'] and m['written'] == 9
 
 
 def test_article_missing_in_api_can_be_allowed(monkeypatch, tmp_path):
     ids = list(range(200000001, 200000011))
     _setup(monkeypatch, tmp_path, 'article', ids=ids, api_ids=[i for i in ids if i != 200000004], MAX_MISSING_IN_API=1)
     assert run('article') == 0
-    data = ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('article-*.jsonld'))
-    assert 'Titel 200000004' not in data and 'Titel 200000003' in data
+    assert 'Titel 200000004' not in article_data(tmp_path) and 'Titel 200000003' in article_data(tmp_path)
 
 
-def test_unreadable_article_is_still_written_from_the_oai(monkeypatch, tmp_path):
+def test_unreadable_article_is_named_and_not_written(monkeypatch, tmp_path):
     ids = list(range(200000001, 200000011))
     _setup(monkeypatch, tmp_path, 'article', ids=ids, MAX_UNREADABLE_IN_API=1)
     _unreadable(monkeypatch, {200000004})
     assert run('article') == 0
     m = manifest(tmp_path, 'article')
-    assert m['unreadable_ids'] == ['200000004'] and m['missing_in_api'] == 0 and m['written'] == 10
-    data = ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('article-*.jsonld'))
-    assert 'Titel 200000004' not in data and 'Tijdschrift' in data       # geen titel, wel het tijdschriftgegeven uit de OAI
+    assert m['unreadable_ids'] == ['200000004'] and m['missing_in_api'] == 0 and m['written'] == 9
+    assert m['intended'] == 10 and 'Titel 200000004' not in article_data(tmp_path)
 
 
 def test_unknown_source_is_an_error(monkeypatch, tmp_path):

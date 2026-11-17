@@ -1,0 +1,681 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<webConfiguration>
+<!-- 452 changes
+ Section: databaseConfiguration,  in brieffields for books, Field name 'ISBN' not found in 'document' 
+  Section: databaseConfiguration,  in detailfields for books, Field name 'ISBN' not found in 'document' 
+   Section: databaseConfiguration,  in brieffields for document, Field name 'ISBN' not found in 'document' 
+    Section: databaseConfiguration,  in detailfields for document, Field name 'ISBN' not found in 'document' 
+	 Section: databaseConfiguration,  in brieffields for article, Field name 'ISBN' not found in 'document' 
+ -->
+  <globalConfiguration>
+    <databasepath>G:\Adlib\Model application 4.5.2.a\data</databasepath>
+    <xmltype>grouped</xmltype>
+    <writeAllowed>False</writeAllowed>
+  </globalConfiguration>
+
+  <databaseConfiguration database="abclayar">
+    <database>collect</database>
+    <brieffields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>monument.complex_number</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.geographical_keyword</field>
+      <field>rights.holder</field>
+      <field>rights.type</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </brieffields>
+    <detailfields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>monument.complex_number</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.geographical_keyword</field>
+      <field>rights.holder</field>
+      <field>rights.type</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </detailfields>
+    <searchfields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>monument.complex_number</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.geographical_keyword</field>
+      <field>rights.holder</field>
+      <field>rights.type</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </searchfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="images">
+    <database>collect</database>
+    <brieffields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>collection</field>
+      <field>creative_commons</field>
+      <field>rights.notes</field>
+      <field>rights.holder</field>
+      <field>content.subject</field>
+      <field>content.subject.lref</field>
+      <!--	  <field>RNA_URI</field> -->
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+      <field>technique</field>
+      <field>object_number</field>
+      <field>material</field>
+      --		<field>
+        monument.record_number
+        <field>
+          country
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <field>
+          province
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <field>
+          county
+          <!--			  <field>term</field>
+			  <field>RNA_identifier</field> -->
+        </field>
+        <field>
+          place
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <!--			<field>monumentnumber.rna_uri</field> -->
+        <field>monument_number</field>
+        <field>RM</field>
+        <field>object_type</field>
+        <field>object_name</field>
+        <field>street</field>
+        <field>house_number</field>
+        <field>zipcode</field>
+        <field>monument_number.x_coordinates</field>
+        <field>monument_number.y_coordinates</field>
+        <field>geographical_keyword</field>
+        <field>complex_number</field>
+      </field>
+      <field>priref</field>
+      <field>NA</field> <!--Shipwreck in Shipwreck-->
+      <field>yE</field>
+      <field>shipwreck</field>
+      <field>shipwreck.municipality</field>
+      <field>shipwreck.excevation_year</field>
+      <field>shipwreck.load</field>
+      <field>shipwreck.ship_name</field>
+      <field>shipwreck.province</field>
+      <field>shipwreck.toponym</field>
+      <field>shipwreck.notes</field>
+      <field>shipwreck.place</field>
+      <field>shipwreck.ship_type</field>
+      <!--		<field>province</field>-->
+      <!--		<field>ship_name</field> -->
+    </brieffields>
+    <detailfields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>collection</field>
+      <field>creative_commons</field>
+      <field>rights.notes</field>
+      <field>content.subject</field>
+      <field>content.subject.lref</field>
+      <!--		 <field>RNA_identifier</field>
+		<field>RNA_URI</field>
+		-->
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+      <field>object_number</field>
+      <field>technique</field>
+      <field>material</field>
+      <field>priref</field>
+      <field>
+        monument.record_number
+        <field>
+          country
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <field>
+          province
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <field>
+          county
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <field>
+          place
+          <!--				<field>term</field>
+				<field>RNA_identifier</field> -->
+        </field>
+        <field>object_type</field>
+        <field>object_name</field>
+        <field>monument_number</field>
+        <field>monumentnumber.rna_uri</field>
+        <field>street</field>
+        <field>house_number</field>
+        <field>zipcode</field>
+        <field>monument_number.x_coordinates</field>
+        <field>monument_number.y_coordinates</field>
+        <field>geographical_keyword</field>
+        <field>complex_number</field>
+      </field>
+      <field>NA</field>
+      <!--Shipwreck in Shipwreck-->
+      <field>yE</field>
+      <field>shipwreck.municipality</field>
+      <field>shipwreck.excevation_year</field>
+      <field>shipwreck.load</field>
+      <field>shipwreck.ship_name</field>
+      <field>shipwreck.province</field>
+      <field>shipwreck.toponym</field>
+      <field>shipwreck.notes</field>
+      <field>shipwreck.place</field>
+      <field>shipwreck.ship_type</field>
+      <field>shipwreck</field>
+      <!--		<field>province</field> -->
+      <!--		<field>ship_name</field> -->
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="molenstichting">
+    <database>collect</database>
+    <brieffields>
+      <field>object_name</field>
+      <field>technique</field>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.place</field>
+      <field>monument.county</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>monument.complex_number</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.geographical_keyword</field>
+      <field>rights.holder</field>
+      <field>rights.type</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </brieffields>
+    <detailfields>
+      <field>object_name</field>
+      <field>technique</field>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>monument.complex_number</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.geographical_keyword</field>
+      <field>rights.holder</field>
+      <field>rights.type</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </detailfields>
+    <searchfields>
+      <field>object_name</field>
+      <field>technique</field>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.record_number</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>monument.complex_number</field>
+      <field>monument.type</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.geographical_keyword</field>
+      <field>rights.holder</field>
+      <field>rights.type</field>
+      <field>content.subject</field>
+      <field>notes</field>
+      <field>edit.date</field>
+      <field>input.date</field>
+      <field>alternative_number.type</field>
+      <field>alternative_number</field>
+    </searchfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="stichting3">
+    <database>collect&gt;photograph</database>
+    <brieffields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>object_number</field>
+    </brieffields>
+    <detailfields>
+      <field>description</field>
+      <field>production.date.start</field>
+      <field>production.date.end</field>
+      <field>reproduction.reference</field>
+      <field>creator</field>
+      <field>creator.role</field>
+      <field>monument.zipcode</field>
+      <field>monument.province</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+      <field>object_number</field>
+    </detailfields>
+  </databaseConfiguration>
+
+
+  <databaseConfiguration database="books">
+    <database>document</database>
+    <brieffields>
+	  <field>lead_word</field>
+      <field>title</field>
+      <field>author.name</field>
+	  <field>l1</field> <!-- auteursnummer -->
+      <field>place_of_publication_2</field>
+      <field>publisher</field>
+      <field>year_of_publication</field>
+	  <!--	<field>search_year</field> -->
+	  <field>accompanying_material</field>
+	  <field>edition</field>
+	  <field>rl</field> <!--reekslidwoord-->
+	  <field>series.lead_word</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+	  <field>isbn</field>
+      <field>dimensions</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+	  <field>person.keyword.name</field>
+      <!--	  <field>RNA_identifier</field> -->
+      <field>RNA_URI</field>
+      <!--<field>material_type</field>-->
+      <field>notes</field>
+      <field>shelf_mark</field>
+      <!--	  <field>monument.record_number</field> -->
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <!--	  <field>monument.county.rna_uri</field>
+	  <field>county.rna_uri</field> -->
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+	  <field>monument.country</field>
+      <field>abstract</field>
+	  <field>table_of_contents</field>
+	  <field>comments</field>
+	  <field>digital_reference</field>
+	<!--  <field>copy.site</field> -->
+	  <field>conference</field>
+	  <field>corporate_author</field>
+ <!-- <field>
+        copy.number
+        <field>shelfmark</field>
+      </field> -->
+    </brieffields>
+    <detailfields>
+	  <field>lead_word</field>
+      <field>title</field>
+      <field>author.name</field>
+	  <field>l1</field> <!-- auteursnummer -->
+      <field>place_of_publication_2</field>
+      <field>publisher</field>
+      <field>year_of_publication</field>
+	 <!-- <field>search_year</field> -->
+	  <field>accompanying_material</field>
+	  <field>edition</field>
+	  <field>rl</field> <!--reekslidwoord-->
+	  <field>series.lead_word</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>dimensions</field>
+	  <field>isbn</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+	  <field>person.keyword.name</field>
+      <!--	  <field>RNA_identifier</field> -->
+      <field>RNA_URI</field>
+      <!--<field>material_type</field>-->
+      <field>notes</field>
+      <field>shelf_mark</field>
+      <!--	  <field>monument.record_number</field> -->
+      <field>monument.province</field>
+      <field>monument.county</field>
+      <!--	  <field>monument.county.rna_uri</field>
+	  <field>county.rna_uri</field> -->
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.name</field>
+	  <field>monument.country</field>
+      <field>abstract</field>
+	  <field>table_of_contents</field>
+	  <field>comments</field>
+	  <field>digital_reference</field>
+	<!--  <field>copy.site</field> -->
+	  <field>conference</field>
+	  <field>corporate_author</field>	
+<!--  <field>
+        copy.number
+        <field>shelfmark</field>
+      </field> -->
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="document">
+    <database>document</database>
+    <brieffields>
+      <field>title</field>
+      <field>author.name</field>
+      <field>place_of_publication_2</field>
+      <field>publisher</field>
+      <field>year_of_publication</field>
+	  <field>series.lead_word</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>dimensions</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+	  <field>person.keyword.name</field>
+      <!--			<field>RNA_identifier</field> -->
+      <field>RNA_URI</field>
+      <field>material_type</field>
+      <field>notes</field>
+      <field>copy.shelfmark</field>
+      <!--			<field>monument.record_number</field> -->
+      <field>monument.province</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+    </brieffields>
+    <detailfields>
+      <field>title</field>
+      <field>author.name</field>
+      <field>place_of_publication_2</field>
+      <field>publisher</field>
+      <field>year_of_publication</field>
+	  <field>series.lead_word</field>
+      <field>series.number</field>
+      <field>series.title</field>
+      <field>pagination</field>
+      <field>illustrations</field>
+      <field>dimensions</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+	  <field>person.keyword.name</field>
+      <!--			<field>RNA_identifier</field> -->
+      <field>RNA_URI</field>
+      <field>material_type</field>
+      <field>notes</field>
+      <field>copy.shelfmark</field>
+      <!--			<field>monument.record_number</field> -->
+      <field>monument.province</field>
+      <field>monument.place</field>
+      <field>monument.number</field>
+      <field>monument.house_number</field>
+      <field>monument.name</field>
+      <field>monument.street</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="archrep">
+    <database>document</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+  
+    <databaseConfiguration database = "article">>
+    <database>document</database>
+    <brieffields>
+      <field>material_type</field>
+      <field>priref</field>
+      <field>author.name</field>
+      <field>title</field>
+      <field>corporate_author</field>
+      <field>place_of_publication_2</field>
+      <field>publisher</field>
+      <field>search_year</field>
+      <field>series.title</field>
+      <field>series.number</field>
+      <field>geographical_keyword</field>
+      <field>keyword.contents</field>
+      <field>notes</field>
+      <field>copy.shelfmark</field>
+      <field>material_type</field>
+      <field>source.material_type</field>
+      <field>source.title</field>
+      <field>source.title.lead_word</field>
+      <field>source.volume</field>
+      <field>source.publication_years</field>
+      <field>source.issue</field>
+      <field>source.pagination</field>
+      <field>source.notes</field>
+      <field>abstract</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+  
+     <databaseConfiguration database="serials">
+    <database>document</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration> 
+
+  <databaseConfiguration database="series">
+    <database>series</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="coll">
+    <database>collect</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="desiderata">
+    <database>document</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="thesau">
+    <database>thesau</database>
+    <brieffields>
+      <field>*</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+  <databaseConfiguration database="molens">
+    <database>collect</database>
+    <brieffields>
+      <field>priref</field>
+      <field>description</field>
+      <field>content.subject.lref</field>
+      <field>content.subject</field>
+      <!--			<field>RNA_identifier</field> -->
+      <field>RNA_URI</field>
+      <field>monument.complex_number.x_coordinates</field>
+      <field>monument.complex_number.y_coordinates</field>
+      <field>monument.complex_number</field>
+      <field>monument.country</field>
+      <field>monument.country.lref</field>
+      <field>monument.county</field>
+      <field>monument.county.lref</field>
+      <!--			<field>monument.county.rna_uri</field> -->
+      <!--			<field>county.rna_uri</field> -->
+      <field>monument.geographical_keyword</field>
+      <field>monument.historical_address</field>
+      <field>monument.house_number.addition</field>
+      <field>monument.house_number</field>
+      <field>monument.label</field>
+      <field>monument.name</field>
+      <field>monument.number.x_coordinates</field>
+      <field>monument.number.y_coordinates</field>
+      <field>monument.number</field>
+      <field>monument.place</field>
+      <field>monument.place.lref</field>
+      <field>monument.province</field>
+      <field>monument.province.lref</field>
+      <field>monument.record_number</field>
+      <field>monument.street</field>
+      <field>monument.type</field>
+      <field>monument.zipcode</field>
+      <field>object_name</field>
+      <field>reproduction.reference.lref</field>
+      <field>reproduction.reference</field>
+    </brieffields>
+    <detailfields>
+      <field>*</field>
+    </detailfields>
+  </databaseConfiguration>
+
+</webConfiguration>

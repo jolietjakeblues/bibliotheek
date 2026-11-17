@@ -8,7 +8,7 @@ shapes in `shacl/bibliotheek.shacl.ttl`. Echte uitvoer staat in [voorbeelden/](v
 | [boek-met-auteurs-en-uitgever.ttl](voorbeelden/boek-met-auteurs-en-uitgever.ttl) | persoon en organisatie als auteur, uitgever, plaats, ISBN, CHT-term |
 | [boek-in-reeks.ttl](voorbeelden/boek-in-reeks.ttl) | reeks met deelnummer |
 | [boek-over-monument.ttl](voorbeelden/boek-over-monument.ttl) | rijksmonumentnummer en plaatsen |
-| [artikel.ttl](voorbeelden/artikel.ttl) | titel uit het API; tijdschrift, jaargang, aflevering en pagina's uit de OAI |
+| [artikel.ttl](voorbeelden/artikel.ttl) | titel, tijdschrift (met het adres van het tijdschriftrecord), jaargang, aflevering en pagina's, alles uit het API |
 
 Deze bestanden worden gegenereerd met `python tools/maak_voorbeelden.py` en door een test bewaakt (`tests/test_docs.py`): verandert de
 mapping, dan faalt die test tot de voorbeelden opnieuw zijn gemaakt.
@@ -47,32 +47,31 @@ mapping, dan faalt die test tot de voorbeelden opnieuw zijn gemaakt.
 | `notes` | `schema:description` @nl | |
 | `abstract` | `schema:abstract` @nl | |
 
-## Artikelen (API + OAI)
+## Artikelen (API, alias `archrep` met gekozen velden)
+
+Een artikel komt volledig uit één API-record. De OAI bepaalt alleen **welke** artikelen worden gepubliceerd. Welke velden uit het API
+worden opgevraagd, staat in `api_fields` ([configuratie.md](configuratie.md)); een veld dat daar niet staat, komt niet in de data.
 
 | Bron | schema.org | Opmerking |
 |---|---|---|
-| API `Title` | `schema:name` @nl | zonder API-record ontbreekt de titel; er wordt niets verzonnen |
-| API `Author`, `Corporate_author` | `schema:author` + `schema:creator` | zonder API-record: de auteurs uit de OAI (`author = {..},`) |
-| API onderwerpen, plaatsen, notities | zoals bij boeken | notities uit API en OAI worden ontdubbeld |
-| OAI `dc:source` | keten `schema:isPartOf`: `PublicationIssue` → `PublicationVolume` → `Periodical` | alleen de niveaus waarvoor gegevens zijn |
-| OAI pagina's | `schema:pageStart` / `schema:pageEnd`, anders `schema:pagination` | `198-203` is een bereik, `8-9, 12` blijft tekst |
-| OAI `Source.materiaal` | `schema:additionalType` (`DefinedTerm`) op de `Periodical` | `tijdschrift`, `jaarboek`, `jaarverslagen` |
-| OAI `year = {..}` | `schema:datePublished` (`xsd:gYear`) | |
+| `Title` | `schema:name` @nl | ontbreekt de titel in de bron, dan ontbreekt `schema:name`; er wordt niets verzonnen (SHACL-waarschuwing) |
+| `Author`, `Corporate_author` | `schema:author` + `schema:creator` | |
+| onderwerpen, plaatsen, notities | zoals bij boeken | |
+| `Source/source.title` (+ `source.title.lead_word`) | `schema:name` van de `Periodical` | `De` + `Bewaarsman` wordt `De Bewaarsman` |
+| `Source/source.title.lref` | het adres van de `Periodical`, en zijn `schema:url` | het priref van het tijdschriftrecord (bijvoorbeeld 400009141). Zonder `lref` valt het adres terug op de naam. |
+| `Source/source.volume`, `source.issue` | keten `schema:isPartOf`: `PublicationIssue` → `PublicationVolume` → `Periodical` | alleen de niveaus waarvoor gegevens zijn |
+| `Source/source.pagination` | `schema:pageStart` / `schema:pageEnd`, anders `schema:pagination` | `198-203` is een bereik, `8-9, 12` blijft tekst |
+| `Source/source.material_type` | `schema:additionalType` (`DefinedTerm`) op de `Periodical` | `tijdschrift`, `jaarboek`, `jaarverslagen` |
+| `search_year`, anders `source.publication_years` | `schema:datePublished` (`xsd:gYear`) | |
 
-### Hoe de OAI-tekst van een artikel wordt gelezen
+Hetzelfde tijdschrift heeft in alle artikelen **één** adres, via zijn priref. Daardoor werkt "alle artikelen in dit tijdschrift"
+zonder op een naam te hoeven letten, en verwijst het adres met `schema:url` naar het tijdschriftrecord in de catalogus.
 
-De OAI levert het tijdschrift als stukjes BibTeX-tekst in `dc:source`:
+Staat er geen `Source` met een titel in het record, dan krijgt het artikel geen `isPartOf` naar een tijdschrift. Staan er meer groepen
+`Source`, dan telt de eerste met een titel.
 
-```
-journal = {Stad en lande : historische bijdragen ... ; 27 (1990), 69, 198-203},
-```
-
-dat wordt: tijdschrift `Stad en lande : ...`, jaargang `27`, jaar `1990`, aflevering `69`, pagina's `198-203`. Bijzonderheden:
-
-- een tijdschrifttitel met voorloop-lidwoord staat in twee stukken (`De` + `Bewaarsman`) en wordt samengevoegd;
-- staat er maar één getal tussen komma's achter het jaar, dan is dat het paginanummer (een aflevering is dan niet te onderscheiden);
-- begint dat deel met een bereik (`8-9, 12`), dan is het geheel een paginering en geen aflevering;
-- wat niet te ontleden is, blijft leeg; het record blijft bestaan.
+**Niet gepubliceerd:** `shelf_mark`, `input.*`, `Edit` (gebruikersnamen van medewerkers), `record_access.owner`, `acquisition_date`. Ze
+worden ook niet opgevraagd.
 
 ## Monumenten
 
@@ -96,7 +95,8 @@ naam per taal mag hebben. De naam blijft als plaats bij het boek.
 | `book`, `article` | priref | nee |
 | `person` | naam | ja, over alle records |
 | `organization` | naam | ja; één adres voor een organisatie als auteur én als uitgever |
-| `series`, `periodical` | naam | ja |
+| `series` | naam | ja |
+| `periodical` | priref van het tijdschriftrecord (`source.title.lref`), anders de naam | ja |
 | `term`, `place` | tekst | ja |
 | `publicationvolume`, `publicationissue` | tijdschrift + jaargang/jaar (+ aflevering) | ja |
 | `monument` | rijksmonumentnummer | ja |

@@ -13,7 +13,7 @@ LICENSE_URI: ''
 
 ### Adlib-API: volledige records ###
 SRC_API: 'https://rce.adlibhosting.com/harvest/wwwopac.ashx'
-SRC_API_DATABASE: 'books'
+SRC_API_DATABASE: 'books'      # standaard-alias; een bron kan met api_database een andere kiezen
 # records per pagina; een pagina duurt 5 tot 17 seconden
 SRC_API_LIMIT: 500
 # pagina's tegelijk ophalen
@@ -32,6 +32,7 @@ SRC_BACKOFF: 2.0
 
 # Bronnen. kind bepaalt welke transformatie wordt gebruikt (book | article).
 #   api_search  zoekopdracht in het Adlib-API (alle records die erin vallen worden opgehaald)
+#   api_database, api_fields  API-alias en de velden die worden opgevraagd (zie bij article)
 #   scope       oai: alleen records die de OAI-set publiceert (de OAI bepaalt wat openbaar is)
 #               api: alles wat api_search oplevert
 #   exclude_priref  [[van, tot], ...] priref's in de OAI-selectie die bij een andere bron horen (worden overgeslagen)
@@ -49,6 +50,15 @@ SOURCES:
   article:
     kind: 'article'
     api_search: 'priref>=200000000 and priref<300000000'
+    # De API geeft per alias een eigen lijst velden, en bij een oogst (veel treffers) minder dan bij één record. De alias `article`
+    # geeft in een oogst geen lead_word, geen CHT-koppelingen en geen `source.title.lref`; `books` geeft de groep Source niet. De alias
+    # `archrep` heeft `*` als lijstvelden: alle velden. Met `fields` vragen we daaruit alleen op wat we publiceren, zodat interne
+    # velden (Edit met gebruikersnamen, record_access.owner, shelf_mark) de server niet verlaten.
+    api_database: 'archrep'
+    api_fields: [priref, title, lead_word, author.name, corporate_author, keyword.contents, geographical_keyword, notes, abstract,
+                 RNA_URI, person.keyword.name, search_year, monument.number, monument.name, monument.country, monument.province,
+                 monument.county, monument.place, source.title, source.title.lead_word, source.title.lref, source.volume,
+                 source.issue, source.publication_years, source.pagination, source.material_type]
     scope: 'oai'
     oai: {set: 'article', prefix: 'oai_dc'}
     catalog_url: 'https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}'
@@ -61,6 +71,9 @@ MAX_MISSING_IN_API: 0
 # aantal te publiceren records dat het API zelf niet kan uitleveren omdat het record in de bron fout staat (bijvoorbeeld
 # een tekst in een getalveld). Ze worden overgeslagen en met priref in het manifest genoemd; meld ze bij de beheerder.
 MAX_UNREADABLE_IN_API: 10
+# percentage artikelen met een tijdschrift dat geen `source.title.lref` (adres van het tijdschriftrecord) heeft. Gemeten: 0%.
+# Een hoog percentage betekent dat de API-alias dat veld niet teruggeeft; de run faalt dan.
+MAX_UNLINKED_JOURNAL_PERCENT: 2
 
 ### Organisatie ###
 ORG_URI: 'https://www.cultureelerfgoed.nl/'

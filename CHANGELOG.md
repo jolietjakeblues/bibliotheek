@@ -17,6 +17,30 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
 - Documentatie in `docs/` en `README.md`; echte voorbeelden in `docs/voorbeelden/` (gegenereerd en door een test bewaakt);
   voorbeeld-SPARQL-query's die op de testrecords worden uitgevoerd.
 
+### Artikelen volledig uit het API (17 november)
+- Artikelen komen nu volledig uit het API; de OAI is voor artikelen alleen nog de selectie (`ListIdentifiers`). Het samenvoegen met
+  `ListRecords` en het ontleden van BibTeX-tekst vervalt. Een artikelrecord heeft een groep `Source` met `source.title.lref`, het priref
+  van het tijdschriftrecord.
+- Het tijdschrift heeft nu één adres per tijdschrift (zijn priref) en een `schema:url` naar zijn catalogusrecord; eerder was het adres
+  de naam. Een artikel heeft nu ook een aflevering waar de OAI alleen een jaargang gaf (bijvoorbeeld 200000001).
+- **Aliassen:** de eerste versie gebruikte de alias `article`, omdat die bij één record 55 velden geeft. In een oogst (veel treffers)
+  geeft het API de `brieffields`: de alias `article` leverde dan geen `lead_word`, geen CHT-koppelingen en geen `source.title.lref`. Een
+  droge run op het echte API liet dat zien (0 tijdschriften met adres); de testrecords kwamen uit een opvraag van één record. Nu: alias
+  `archrep` (alle velden in een oogst) met `api_fields` (alleen wat we publiceren). Gecontroleerd: dezelfde graph als de volledige
+  weergave van het losse record (80 van 80).
+- Interne velden (`Edit` met gebruikersnamen, `record_access.owner`, `shelf_mark`) worden niet opgevraagd en niet gepubliceerd.
+- Nieuwe bewaking: `MAX_UNLINKED_JOURNAL_PERCENT` (2) laat de run falen als artikelen het tijdschriftadres missen.
+- Een artikel dat het API niet levert, wordt niet meer uit de OAI alleen geschreven (zoals bij boeken).
+- Testrecords van artikelen zijn opgehaald zoals de oogst het doet (alias en velden uit de config).
+- Gecorrigeerd: de docs beweerden dat alle API-aliassen dezelfde velden geven, en dat de OAI het tijdschrift nodig had.
+
+### Antwoorden van de beheerder (17 november)
+- De OAI-sets zijn een zoekopdracht op een pointerfile: `books` = records met een exemplaarnummer, `article` = `bron.Repository` gevuld. Het
+  API geeft alle records terug. De 710 artikelen alleen in de boekenset hebben een tijdschrift maar geen `bron.Repository`.
+- De reeks staat weer in `oai_dc_book` (gecontroleerd).
+- Gevonden bij het nalopen van de API-configuratie: een artikelrecord heeft een groep `Source` met `source.title.lref`, het priref van
+  het tijdschriftrecord. Verwerkt in de pijplijn, zie hierboven.
+
 ### Eerste volledige run (mislukt) en wat eruit volgde
 - De publicatie naar Triply slaagde; alleen de laatste stap, `sync`, faalde met `Service not found`. De dataset gebruikt Speedy en
   heeft geen service met een eigen naam (de stap was overgenomen uit kunstcollecties-etl). De stap kijkt nu eerst of de dataset een

@@ -7,6 +7,10 @@ telt vanaf 1 (`first_item` in het antwoord). Met stappen van 0, 500, 1000 overla
 de juiste stappen zijn 1, 501, 1001. Een pagina duurt
 5 tot 17 seconden; `workers` pagina's tegelijk houdt de totale looptijd binnen redelijke grenzen.
 `diagnostic/hits` geeft het totaal aantal treffers van de zoekopdracht; de aanroeper vergelijkt dat met `state['seen']`.
+
+LET OP: welke velden een record heeft, hangt af van de alias (`database=`) EN van het aantal treffers. Bij één treffer geeft het API de
+`detailfields` van de alias, bij meer de `brieffields`. Een record dat je los ophaalt, kan dus meer velden hebben dan hetzelfde record in
+een oogst. Aliassen met `*` als brieffields (zoals `archrep`) geven in een oogst alle velden; met `fields=` kies je er zelf uit.
 """
 import collections
 import concurrent.futures
@@ -28,13 +32,15 @@ class AdlibError(Exception):
     """Het API antwoordde met een foutmelding (bijv. een ongeldige zoekopdracht)."""
 
 
-def build_url(base: str, database: str, search: str, start: int, limit: int) -> str:
+def build_url(base: str, database: str, search: str, start: int, limit: int, fields: Optional[str] = None) -> str:
     params = {'database': database, 'search': search, 'XMLtype': 'grouped', 'limit': limit, 'startfrom': start}
+    if fields:
+        params['fields'] = fields
     return f"{base.rstrip('?')}?{urllib.parse.urlencode(params)}"
 
 
 def fetch_page(base: str, database: str, search: str, start: int, limit: int,
-               retries: int = 5, backoff: float = 2.0) -> ET.Element:
+               retries: int = 5, backoff: float = 2.0, fields: Optional[str] = None) -> ET.Element:
     """Eén pagina ophalen en parsen.
 
     Het ophalen zelf (retries, Retry-After, gzip/deflate, timeout) doet dezelfde functie als de OAI-client. Daarbovenop
@@ -42,7 +48,7 @@ def fetch_page(base: str, database: str, search: str, start: int, limit: int,
     suggesties. Een echte syntaxisfout in de zoekopdracht komt met `suggestions` terug en is dus niet tijdelijk; die
     geeft meteen een AdlibError. Voorbeeld van een tijdelijke serverfout (gezien in een GitHub Action, lokaal niet te
     reproduceren): 'An item with the same key has already been added.'"""
-    url = build_url(base, database, search, start, limit)
+    url = build_url(base, database, search, start, limit, fields)
     attempts = max(1, retries)
     last = None
     for attempt in range(attempts):
@@ -74,15 +80,16 @@ RECORD_ERROR = re.compile(r'record number (\d+)', re.IGNORECASE)
 
 
 def fetch_readable(base: str, database: str, search: str, start: int, limit: int, retries: int = 5,
-                   backoff: float = 2.0, hits: Optional[int] = None) -> Tuple[ET.Element, list]:
+                   backoff: float = 2.0, hits: Optional[int] = None, fields: Optional[str] = None) -> Tuple[ET.Element, list]:
     """Zoals `fetch_page`, maar een record dat de server zelf niet kan uitleveren stopt de pagina niet.
 
     Een foutmelding die een record noemt ("Invalid integer value '76, 85' for Field 't3' ..., record number 450004680")
     is geen tijdelijke storing: het record staat in de bron fout en elke pagina die het bevat, faalt. Zo'n pagina wordt
     in tweeën gedeeld, steeds verder, tot het ene kapotte record overblijft. De rest van de pagina komt gewoon binnen.
     Geeft (pagina, [priref's die niet te lezen waren]). Een andere fout (zonder record) wordt niet verholpen maar doorgegeven."""
+    extra = {'fields': fields} if fields else {}                           # alleen meegeven als er velden zijn gekozen
     try:
-        return fetch_page(base, database, search, start, limit, retries, backoff), []
+        return fetch_page(base, database, search, start, limit, retries, backoff, **extra), []
     except AdlibError as e:
         named = RECORD_ERROR.search(str(e))
         if named is None:
@@ -99,7 +106,7 @@ def fetch_readable(base: str, database: str, search: str, start: int, limit: int
             n = min(n, total - s + 1)                                      # niet voorbij het einde van de resultaten vragen
         if n < 1:
             continue
-        page, bad = fetch_readable(base, database, search, s, n, min(retries, 2), backoff, total)
+        page, bad = fetch_readable(base, database, search, s, n, min(retries, 2), backoff, total, fields)
         records.extend(page.findall('.//recordList/record'))
         unreadable.extend(bad)
         found = page.findtext('.//diagnostic/hits')
@@ -119,7 +126,8 @@ def _empty_page(hits: Optional[int], records: Optional[list] = None) -> ET.Eleme
 
 
 def iter_records(base: str, database: str, search: str, state: dict, limit: int = 500, workers: int = 3,
-                 retries: int = 5, backoff: float = 2.0, max_records: Optional[int] = None) -> Iterator[ET.Element]:
+                 retries: int = 5, backoff: float = 2.0, max_records: Optional[int] = None,
+                 fields: Optional[str] = None) -> Iterator[ET.Element]:
     """Geeft alle <record>-elementen van de zoekopdracht, in volgorde van pagina.
 
     Houdt `state['hits']` (aantal treffers volgens het API), `state['seen']` (aantal opgehaalde records) en
@@ -128,7 +136,7 @@ def iter_records(base: str, database: str, search: str, state: dict, limit: int 
     state.setdefault('seen', 0)
     state.setdefault('duplicates', 0)
     state.setdefault('unreadable', [])
-    first, bad = fetch_readable(base, database, search, 1, limit, retries, backoff)
+    first, bad = fetch_readable(base, database, search, 1, limit, retries, backoff, fields=fields)
     state['hits'] = int(first.findtext('.//diagnostic/hits') or 0)
     state['unreadable'].extend(bad)
     pending = collections.deque()
@@ -136,7 +144,7 @@ def iter_records(base: str, database: str, search: str, state: dict, limit: int 
     seen_ids = set()
 
     def fetch(s):
-        return fetch_readable(base, database, search, s, limit, retries, backoff, state['hits'])
+        return fetch_readable(base, database, search, s, limit, retries, backoff, state['hits'], fields)
 
     def pages():
         yield first

@@ -62,16 +62,18 @@ Elke `harvest`-job schrijft een samenvatting (*Summary* bovenaan de run) met het
 
 ```json
 {
-  "oai_seen": 182398, "oai_expected": 182398, "oai_windows": 40,
-  "api_seen": 216901, "api_hits": 216902, "api_duplicates": 0, "api_unreadable": 1, "unreadable_in_scope": 1,
-  "intended": 182398, "written": 182398, "files": 27,
-  "errors": 0, "skipped": 0, "skipped_reasons": {},
-  "out_of_scope": 34504, "missing_in_api": 0, "unreadable_ids": ["450004680"],
+  "oai_seen": 182397, "oai_expected": 182397, "oai_windows": 60,
+  "api_seen": 216899, "api_hits": 216900, "api_duplicates": 0, "api_unreadable": 1, "unreadable_in_scope": 0,
+  "intended": 155422, "written": 155422, "files": 23,
+  "errors": 0, "skipped": 26975,
+  "skipped_reasons": {"priref in 200000000-299999999 (hoort bij een andere bron)": 26975},
+  "out_of_scope": 61477, "missing_in_api": 0, "unreadable_ids": ["450004680"],
   "complete": true
 }
 ```
 
-(De cijfers zijn een illustratie van de vorm, geen meting.)
+(Boekenmanifest van een echte run, 14 november. `out_of_scope` zijn API-records zonder plaats in de OAI-selectie: boeken zonder
+exemplaar, tijdschriftrecords en rapporten. `skipped` zijn de artikelen in de OAI-set `books`, die via de bron `article` lopen.)
 
 | Sleutel | Betekenis |
 |---|---|
