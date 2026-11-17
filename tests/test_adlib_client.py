@@ -211,3 +211,39 @@ def test_persistent_server_error_is_raised_after_all_attempts(monkeypatch):
     with pytest.raises(adlib_client.AdlibError, match='same key'):
         adlib_client.fetch_page('http://x', 'books', 'all', 1, 10, retries=4)
     assert len(calls) == 4
+
+
+def test_fields_are_only_in_the_url_when_chosen():
+    url = adlib_client.build_url('http://x/api', 'archrep', 'priref=1', 1, 10)
+    assert 'fields=' not in url
+    url = adlib_client.build_url('http://x/api', 'archrep', 'priref=1', 1, 10, 'priref,title,source.title.lref')
+    assert 'fields=priref%2Ctitle%2Csource.title.lref' in url and 'database=archrep' in url
+
+
+def test_fields_reach_every_request_including_the_split_of_a_broken_page(monkeypatch):
+    seen = []
+
+    def fake(base, database, search, start, limit_, retries=5, backoff=2.0, fields=None):
+        seen.append(fields)
+        offset = start - 1
+        ids = list(range(offset + 1, min(offset + limit_, 40) + 1))
+        if 17 in ids:
+            raise adlib_client.AdlibError(BAD.format(17))
+        return page(offset, len(ids), 40)
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', fake)
+    state = {}
+    out = list(adlib_client.iter_records('http://x', 'archrep', 'all', state, limit=10, workers=2, fields='priref,title'))
+    assert len(out) == 39 and state['unreadable'] == ['17']
+    assert set(seen) == {'priref,title'}                       # ook de halve pagina's vragen dezelfde velden
+
+
+def test_without_fields_the_request_has_no_fields_argument(monkeypatch):
+    calls = []
+
+    def fake(base, database, search, start, limit_, retries=5, backoff=2.0):       # kent `fields` niet
+        calls.append(1)
+        return page(start - 1, 5, 5)
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', fake)
+    assert len(list(adlib_client.iter_records('http://x', 'books', 'all', {}, limit=10))) == 5 and calls

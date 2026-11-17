@@ -18,7 +18,6 @@ from rdflib.compare import isomorphic
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'src'))
 
-import oai_client  # noqa: E402
 import transform_service as ts  # noqa: E402
 import uris  # noqa: E402
 
@@ -30,7 +29,7 @@ VOORBEELDEN = [
     ('boek-met-auteurs-en-uitgever', 'book', '17', 'auteurs (persoon en organisatie), uitgever, plaats, ISBN, CHT-term'),
     ('boek-in-reeks', 'book', '81', 'reeks met deelnummer'),
     ('boek-over-monument', 'book', '90', 'rijksmonumentnummer en plaatsen'),
-    ('artikel', 'article', '200000025', 'titel uit het API, tijdschrift/jaargang/aflevering en pagina\'s uit de OAI'),
+    ('artikel', 'article', '200000025', 'titel, tijdschrift (met het adres van het tijdschriftrecord), jaargang, aflevering en pagina\'s, alles uit het API'),
 ]
 
 
@@ -43,16 +42,6 @@ def api_records(name: str) -> dict:
     return {r.get('priref'): r for r in ET.parse(FIXTURES / name).getroot().iter('record')}
 
 
-def oai_article(priref: str):
-    root = ET.parse(FIXTURES / 'article_page.xml').getroot()
-    for rec in root.findall('.//{*}record'):
-        header = {'identifier': rec.findtext('.//{*}identifier'), 'datestamp': rec.findtext('.//{*}datestamp'),
-                  'deleted': False}
-        if ts.record_priref(header['identifier']) == priref:
-            return header, ts.collect_fields(rec.find('{*}metadata')[0])
-    raise KeyError(priref)
-
-
 def build(config: dict, kind: str, priref: str) -> Graph:
     """Eén record met alle nodes die het meeneemt, zonder de dataset- en organisatie-node."""
     graph = Graph()
@@ -60,8 +49,7 @@ def build(config: dict, kind: str, priref: str) -> Graph:
     if kind == 'book':
         ts.transform_book(graph, config, api_records('api_books.xml')[priref], source)
     else:
-        header, fields = oai_article(priref)
-        ts.transform_article(graph, config, header, fields, source, api_records('api_articles.xml')[priref])
+        ts.transform_article(graph, config, api_records('api_articles.xml')[priref], source)
     return graph
 
 

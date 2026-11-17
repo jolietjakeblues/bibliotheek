@@ -15,19 +15,19 @@ Linked Data Voorziening van de RCE.
 
 ```mermaid
 flowchart LR
-    OAI["OAI-PMH<br/>selectie + tijdschriftgegevens"] --> H
+    OAI["OAI-PMH<br/>selectie"] --> H
     API["Adlib-API<br/>volledige records"] --> H
-    H["oogst + samenvoegen"] --> T["schema.org<br/>JSON-LD"] --> V["SHACL"] --> P["TriplyDB CLI"] --> LDV[("Linked Data<br/>Voorziening")]
+    H["selectie + inhoud"] --> T["schema.org<br/>JSON-LD"] --> V["SHACL"] --> P["TriplyDB CLI"] --> LDV[("Linked Data<br/>Voorziening")]
 ```
 
 De catalogus is op twee manieren te benaderen en geen van beide is volledig:
 
 | | OAI-PMH | Adlib-API |
 |---|---|---|
-| Levert | welke records openbaar zijn; bij artikelen het tijdschrift, de jaargang en de pagina's | volledige records: reeks, uitgever en plaats apart, CHT-URI's, artikeltitels |
-| Mist | reeksen, artikeltitels | tijdschrift bij een artikel; weet niet wat openbaar is |
+| Levert | de selectie (boeken met een exemplaar, artikelen met `bron.Repository`); bij artikelen het tijdschrift, de jaargang en de pagina's | volledige records: reeks, uitgever en plaats apart, CHT-URI's, artikeltitels |
+| Mist | artikeltitels; plaats en uitgever apart | niets wat we publiceren, mits de juiste alias en velden worden gekozen (zie [docs/architectuur.md](docs/architectuur.md)) |
 
-Daarom bepaalt de OAI **welke** records worden gepubliceerd, en levert het API de **inhoud**; bij artikelen worden beide samengevoegd op
+Daarom bepaalt de OAI **welke** records worden gepubliceerd (een zoekopdracht op een pointerfile, geen publicatievlag), en levert het API de **inhoud**; bij artikelen worden beide samengevoegd op
 het priref. Zie [docs/architectuur.md](docs/architectuur.md).
 
 | Bron | Omvang volgens de OAI | Wordt | Graph in Triply |

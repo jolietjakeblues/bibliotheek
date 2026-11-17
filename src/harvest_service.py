@@ -5,8 +5,8 @@ Gebruik:
     python src/harvest_service.py --source all --max-records 50      # snelle test
 
 Bronnen (zie config/config.yml):
-  books    volledige records uit het Adlib-API. De OAI-set `books` bepaalt welke records openbaar zijn (scope: oai).
-  article  titel en onderwerpen uit het Adlib-API, tijdschrift/jaar/pagina's uit OAI `oai_dc`, samengevoegd op priref.
+  books    volledige records uit het Adlib-API (alias `books`). De OAI-set `books` bepaalt welke records worden gepubliceerd.
+  article  volledige records uit het Adlib-API (alias `article`, met tijdschriftgegevens). De OAI-set `article` bepaalt de selectie.
 
 Per bron ontstaan `{CACHE_PATH}{bron}-0000.jsonld`, `-0001.jsonld`, ... en `{CACHE_PATH}manifest-{bron}.json`.
 Controles (de run faalt, zodat er niets gepubliceerd wordt):
@@ -14,6 +14,7 @@ Controles (de run faalt, zodat er niets gepubliceerd wordt):
   - weggeschreven + fouten == wat we wilden schrijven (niets raakt stilzwijgend kwijt);
   - records die de OAI publiceert maar het API niet kent blijven binnen MAX_MISSING_IN_API;
   - records die het API zelf niet kan uitleveren (kapot in de bron) blijven binnen MAX_UNREADABLE_IN_API en staan in het manifest;
+  - artikelen met een tijdschrift hebben (op MAX_UNLINKED_JOURNAL_PERCENT na) het adres van dat tijdschrift;
   - het aantal transformatiefouten blijft binnen MAX_RECORD_ERRORS.
 """
 import argparse
@@ -80,7 +81,7 @@ class ChunkWriter:
 
 
 def new_state() -> dict:
-    return {'oai_seen': 0, 'oai_expected': None, 'oai_windows': None, 'api_seen': 0, 'api_hits': None, 'skipped': 0, 'skipped_reasons': {},
+    return {'oai_seen': 0, 'oai_expected': None, 'oai_windows': None, 'with_journal': 0, 'journal_without_link': 0, 'api_seen': 0, 'api_hits': None, 'skipped': 0, 'skipped_reasons': {},
             'errors': 0, 'error_ids': [], 'api_duplicates': 0, 'written': 0, 'files': 0, 'out_of_scope': 0, 'missing_in_api': 0,
             'missing_ids': [], 'intended': 0, 'limited': False, 'api_unreadable': 0, 'unreadable_ids': [],
             'unreadable_in_scope': 0}
@@ -110,11 +111,21 @@ def _oai_iter(config: dict, source: dict, state: dict, verb: str, max_records):
     return iterate(config['SRC_URI'], oai['set'], oai['prefix'], state, **args)
 
 
+def _api_fields(source: dict):
+    """`api_fields` van de bron als komma-lijst voor de parameter `fields` (None: de standaardvelden van de alias)."""
+    fields = source.get('api_fields')
+    if not fields:
+        return None
+    return fields if isinstance(fields, str) else ','.join(fields)
+
+
 def _api_iter(config: dict, source: dict, api_state: dict, cap):
     return adlib_client.iter_records(
-        config['SRC_API'], config.get('SRC_API_DATABASE', 'books'), source['api_search'], api_state,
+        config['SRC_API'], source.get('api_database') or config.get('SRC_API_DATABASE', 'books'), source['api_search'],
+        api_state,
         limit=int(config.get('SRC_API_LIMIT', 500)), workers=int(config.get('SRC_API_WORKERS', 3)),
-        retries=int(config.get('SRC_RETRIES', 5)), backoff=float(config.get('SRC_BACKOFF', 2.0)), max_records=cap)
+        retries=int(config.get('SRC_RETRIES', 5)), backoff=float(config.get('SRC_BACKOFF', 2.0)), max_records=cap,
+        fields=_api_fields(source))
 
 
 def _count_api(state: dict, api_state: dict, scope):
@@ -147,7 +158,12 @@ def _exclude_other_source(scope: set, source: dict, state: dict) -> set:
     return kept
 
 
-def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, max_records=None):
+def harvest_records(config: dict, source: dict, writer: ChunkWriter, state: dict, max_records=None):
+    """Boeken en artikelen: de OAI geeft de selectie (alleen de identifiers), het API de inhoud van elk record.
+
+    scope 'oai': alleen records die de OAI-set bevat worden geschreven; scope 'api': alles wat de zoekopdracht oplevert.
+    Het API-record wordt per soort getransformeerd (`transform_book` of `transform_article`)."""
+    transform = transform_service.transform_book if source['kind'] == 'book' else transform_service.transform_article
     scope = None
     if source.get('scope', 'oai') == 'oai':
         oai_state = {}
@@ -156,6 +172,8 @@ def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, 
         for header in _oai_iter(config, source, oai_state, 'ListIdentifiers', max_records):
             if header['deleted']:
                 _skip(state, 'deleted')
+            elif not header['identifier']:
+                _skip(state, 'geen identifier')
             else:
                 scope.add(transform_service.record_priref(header['identifier']))
         state['oai_seen'], state['oai_expected'] = oai_state['seen'], oai_state.get('complete_list_size')
@@ -176,9 +194,14 @@ def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, 
             found.add(priref)
         else:
             state['intended'] += 1
-        writer.add(transform_service.transform_book, record, source)
+        if source['kind'] == 'article':
+            journal = transform_service.article_source(record)
+            if journal:
+                state['with_journal'] += 1
+                state['journal_without_link'] += not journal['lref']
+        writer.add(transform, record, source)
         if api_state['seen'] % 5000 == 0:
-            logger.info('books: %d/%s API-records verwerkt', api_state['seen'], api_state.get('hits'))
+            logger.info('%s: %d/%s API-records verwerkt', source['kind'], api_state['seen'], api_state.get('hits'))
     _count_api(state, api_state, scope)
     if scope is None:
         state['intended'] += state['unreadable_in_scope']      # beoogd telt hier de records die we zagen; ook het onleesbare hoort erbij
@@ -189,52 +212,6 @@ def harvest_books(config: dict, source: dict, writer: ChunkWriter, state: dict, 
         state['missing_ids'] = missing[:200]
 
 
-def harvest_articles(config: dict, source: dict, writer: ChunkWriter, state: dict, max_records=None):
-    oai_state = {}
-    oai_records = {}
-    logger.info('OAI ophalen: set=%s prefix=%s', source['oai']['set'], source['oai']['prefix'])
-    for header, element in _oai_iter(config, source, oai_state, 'ListRecords', max_records):
-        if header['deleted']:
-            _skip(state, 'deleted')
-        elif element is None:
-            _skip(state, 'geen metadata')
-        elif not header['identifier']:
-            _skip(state, 'geen identifier')
-        else:
-            oai_records[transform_service.record_priref(header['identifier'])] = (
-                header, transform_service.collect_fields(element))
-    state['oai_seen'], state['oai_expected'] = oai_state['seen'], oai_state.get('complete_list_size')
-    state['oai_windows'] = oai_state.get('windows')
-    state['intended'] = len(oai_records)
-    logger.info('OAI: %d artikelen', len(oai_records))
-
-    api_state = {}
-    done = set()
-    cap = None if max_records is None else max_records * 3 + 500
-    for record in _api_iter(config, source, api_state, cap):
-        priref = record.get('priref')
-        if priref not in oai_records:
-            state['out_of_scope'] += 1
-            continue
-        header, fields = oai_records[priref]
-        done.add(priref)
-        writer.add(transform_service.transform_article, header, fields, source, record)
-        if api_state['seen'] % 5000 == 0:
-            logger.info('article: %d/%s API-records verwerkt', api_state['seen'], api_state.get('hits'))
-    _count_api(state, api_state, set(oai_records))
-
-    # OAI-artikelen zonder API-record: wel schrijven (tijdschriftgegevens), maar tellen en bewaken. Een artikel dat het
-    # API niet kon uitleveren (unreadable) wordt ook zo geschreven, maar telt niet als 'ontbreekt in het API'.
-    leftover = sorted((p for p in oai_records if p not in done), key=int)
-    unreadable = set(api_state.get('unreadable', []))
-    missing = [p for p in leftover if p not in unreadable]
-    state['missing_in_api'] = len(missing)
-    state['missing_ids'] = missing[:200]
-    for priref in leftover:
-        header, fields = oai_records[priref]
-        writer.add(transform_service.transform_article, header, fields, source, None)
-
-
 def harvest_source(config: dict, source_name: str, cache_path: str, chunk_size: int, max_records=None) -> dict:
     """Oogst één bron en geef de state terug (tellers, volledigheid)."""
     source = config['SOURCES'][source_name]
@@ -242,15 +219,13 @@ def harvest_source(config: dict, source_name: str, cache_path: str, chunk_size: 
     state['limited'] = max_records is not None
     writer = ChunkWriter(config, cache_path, source_name, chunk_size, state)
     logger.info('Start oogst %s (%s)', source_name, source['kind'])
-    if source['kind'] == 'book':
-        harvest_books(config, source, writer, state, max_records)
-    else:
-        harvest_articles(config, source, writer, state, max_records)
+    harvest_records(config, source, writer, state, max_records)
     writer.flush()                       # ook de LAATSTE (kleinere) chunk moet weggeschreven worden
     return state
 
 
-def verify_completeness(state: dict, source: dict, max_record_errors: int, max_missing: int, max_unreadable: int = 0) -> bool:
+def verify_completeness(state: dict, source: dict, max_record_errors: int, max_missing: int, max_unreadable: int = 0,
+                        max_unlinked_percent: float = 100.0) -> bool:
     """Vergelijk wat we gezien en verwerkt hebben met wat de bronnen aankondigen."""
     if state['limited']:
         logger.info('Beperkte run (--max-records): volledigheidscontrole overgeslagen.')
@@ -270,9 +245,8 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
         logger.error('ONVOLLEDIG (API): bron kondigt %s records aan, %d opgehaald, %d onleesbaar (%d dubbel geleverd).',
                      state['api_hits'], state['api_seen'], state['api_unreadable'], state['api_duplicates'])
         ok = False
-    # boeken: wat de OAI publiceert maar het API niet kent of niet kon uitleveren, wordt niet geschreven; artikelen
-    # worden dan alleen uit de OAI geschreven
-    not_written = state['missing_in_api'] + state['unreadable_in_scope'] if source['kind'] == 'book' else 0
+    # wat de OAI publiceert maar het API niet kent of niet kon uitleveren, wordt niet geschreven
+    not_written = state['missing_in_api'] + state['unreadable_in_scope']
     if state['written'] + state['errors'] + not_written != state['intended']:
         logger.error('Rekenfout: weggeschreven (%d) + fouten (%d) + niet in API (%d) != beoogd (%d).',
                      state['written'], state['errors'], not_written, state['intended'])
@@ -280,6 +254,13 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
     if state['missing_in_api'] > max_missing:
         logger.error('%d records staan in de OAI maar niet in het API (toegestaan: %d): %s', state['missing_in_api'],
                      max_missing, ', '.join(state['missing_ids'][:20]))
+        ok = False
+    # artikelen: het tijdschrift moet naar zijn eigen record verwijzen (`source.title.lref`). Ontbreekt dat bij bijna alle artikelen, dan
+    # geeft de gekozen API-alias die velden niet mee (bij een bulkopvraag verschilt dat per alias): niet publiceren.
+    if state['with_journal'] and 100.0 * state['journal_without_link'] / state['with_journal'] > max_unlinked_percent:
+        logger.error('%d van %d artikelen met een tijdschrift hebben geen `source.title.lref` (toegestaan: %s%%). Controleer de '
+                     'API-alias en `api_fields` van de bron: de gekozen alias geeft dat veld waarschijnlijk niet terug.',
+                     state['journal_without_link'], state['with_journal'], max_unlinked_percent)
         ok = False
     if state['unreadable_in_scope'] > max_unreadable:
         logger.error('%d te publiceren records waren in het API onleesbaar (toegestaan: %d): %s',
@@ -298,7 +279,7 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
 
 def write_manifest(cache_path: str, source_name: str, state: dict, complete: bool):
     keys = ('oai_seen', 'oai_expected', 'oai_windows', 'api_seen', 'api_hits', 'api_duplicates', 'intended', 'written', 'files', 'errors', 'skipped',
-            'skipped_reasons', 'out_of_scope', 'missing_in_api', 'api_unreadable', 'unreadable_in_scope')
+            'skipped_reasons', 'out_of_scope', 'missing_in_api', 'api_unreadable', 'unreadable_in_scope', 'with_journal', 'journal_without_link')
     manifest = {k: state.get(k) for k in keys}
     manifest['source'] = source_name
     manifest['error_ids'] = state.get('error_ids', [])[:200]
@@ -334,7 +315,8 @@ def main(argv=None) -> int:
     for name in names:
         state = harvest_source(config, name, cache_path, args.chunks, args.max_records)
         complete = verify_completeness(state, config['SOURCES'][name], int(config.get('MAX_RECORD_ERRORS', 0)),
-                                       int(config.get('MAX_MISSING_IN_API', 0)), int(config.get('MAX_UNREADABLE_IN_API', 0)))
+                                       int(config.get('MAX_MISSING_IN_API', 0)), int(config.get('MAX_UNREADABLE_IN_API', 0)),
+                                       float(config.get('MAX_UNLINKED_JOURNAL_PERCENT', 100)))
         write_manifest(cache_path, name, state, complete)
         all_ok = all_ok and complete
     return 0 if all_ok else 1

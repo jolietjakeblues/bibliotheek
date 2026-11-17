@@ -2,8 +2,8 @@
 
 Bronnen:
   boek      Adlib-API (volledig record): titel, auteurs, uitgever + plaats, reeks, ISBN, onderwerpen met CHT-URI's.
-  artikel   Adlib-API (titel, auteurs, onderwerpen) samengevoegd met OAI `oai_dc` (tijdschrift, jaargang, jaar,
-            pagina's) op priref. Het OAI-record kent geen titel, het API-record geen tijdschrift.
+  artikel   Adlib-API, alias `article`: titel, auteurs, onderwerpen en de groep `Source` (tijdschrift, jaargang, aflevering,
+            jaar, pagina's, en het priref van het tijdschriftrecord). De OAI bepaalt alleen welke artikelen worden gepubliceerd.
 
 De mapping staat in de docstrings van `transform_book` en `transform_article` en in README.md.
 Elk record neemt al zijn eigen nodes mee, zodat een uitvoerbestand (chunk) op zichzelf valideerbaar is.
@@ -16,12 +16,6 @@ from rdflib.namespace import RDF, SDO, XSD
 
 import adlib_client as adlib
 import uris
-
-NS_PREFIX = {
-    'http://purl.org/dc/elements/1.1/': 'dc',
-    'http://purl.org/dc/terms/': 'dcterms',
-    'http://www.europeana.eu/schemas/edm/': 'edm',
-}
 
 # Organisatie-achtige namen: de bron maakt geen onderscheid tussen persoon en instelling bij trefwoorden.
 _ORG_WORDS = re.compile(
@@ -154,7 +148,7 @@ def _add_named(graph: Graph, config: dict, work: URIRef, predicate: URIRef, name
     return node
 
 
-def _add_api_description(graph: Graph, config: dict, work: URIRef, record, extra_notes=()):
+def _add_api_description(graph: Graph, config: dict, work: URIRef, record):
     """Velden die boeken en artikelen in het API-record delen: onderwerpen, plaatsen, monumenten, notities."""
     for keyword in adlib.texts(record, 'Keyword/keyword.contents'):
         _add_named(graph, config, work, SDO.about, keyword, 'term', [SDO.DefinedTerm])
@@ -184,7 +178,7 @@ def _add_api_description(graph: Graph, config: dict, work: URIRef, record, extra
     for place in dict.fromkeys(places):
         _add_named(graph, config, work, SDO.spatialCoverage, place, 'place', [SDO.Place])
 
-    for note in dict.fromkeys(list(adlib.texts(record, 'notes')) + list(extra_notes)):
+    for note in dict.fromkeys(adlib.texts(record, 'notes')):
         graph.add((work, SDO.description, Literal(note, lang='nl')))
     for text in adlib.texts(record, 'abstract'):
         graph.add((work, SDO.abstract, Literal(text, lang='nl')))
@@ -284,114 +278,55 @@ def transform_book(graph: Graph, config: dict, record, source: dict) -> URIRef:
 # artikelen (OAI oai_dc + Adlib-API)
 # ---------------------------------------------------------------------------
 
-def collect_fields(element) -> dict:
-    """OAI Dublin Core: {'dc:source': ['journal = {..', ...], ...}; sleutel is prefix:lokale naam, ongetrimd."""
-    fields = {}
-    for child in element:
-        tag = child.tag
-        if not isinstance(tag, str) or '}' not in tag:
+def article_source(record) -> Optional[dict]:
+    """Het tijdschrift waarin het artikel staat, uit de groep `Source` van het API-record (alias `article`).
+
+    Geeft None als het record geen `Source` met een titel heeft. Staan er meer groepen, dan telt de eerste met een titel."""
+    for src in record.findall('Source'):
+        title = adlib.first(src, 'source.title')
+        if not title:
             continue
-        ns, local = tag[1:].split('}', 1)
-        fields.setdefault(f'{NS_PREFIX.get(ns, ns)}:{local}', []).append(''.join(child.itertext()))
-    return fields
-
-
-_BIBTEX = re.compile(r'^\s*(?P<key>\w+)\s*=\s*\{(?P<value>.*?)\}?\s*,?\s*$', re.S)
-
-
-def bibtex_value(value: str, key: str) -> Optional[str]:
-    """'author = {Harst, J.J. van der},' -> 'Harst, J.J. van der' (alleen als de sleutel klopt)."""
-    m = _BIBTEX.match(value or '')
-    if m and m.group('key').lower() == key:
-        return clean(m.group('value')) or None
+        return {
+            'journal': join_title(adlib.first(src, 'source.title.lead_word'), title),
+            'lref': adlib.first(src, 'source.title.lref'),            # priref van het tijdschriftrecord
+            'volume': adlib.first(src, 'source.volume'),
+            'issue': adlib.first(src, 'source.issue'),
+            'year': year_of(adlib.first(src, 'source.publication_years')),
+            'pages': adlib.first(src, 'source.pagination'),
+            'material': adlib.first(src, 'source.material_type'),
+        }
     return None
 
 
-def parse_article_source(sources: list) -> dict:
-    """Ontleed de dc:source-stukken van een artikel.
+def transform_article(graph: Graph, config: dict, record, source: dict) -> URIRef:
+    """Adlib-artikelrecord (alias `article`) -> schema:Article (en schema:CreativeWork).
 
-    ['journal = {Stad en lande : ... ; ', '27 ', '(1990)', ', 69', ', 198-203},', 'Source.materiaal: tijdschrift']
-    -> journal, volume '27', year '1990', issue '69', pages '198-203', material 'tijdschrift'.
-    Een journaltitel met voorloop-lidwoord staat in twee stukken ('journal = {De', 'journal = {vrije Fries ; ').
-    Velden die niet ontleed kunnen worden blijven leeg; het record blijft bestaan.
-    """
-    material = None
-    pieces = []
-    for s in sources:
-        s = s or ''
-        if s.strip().lower().startswith('source.materiaal:'):
-            material = clean(s.split(':', 1)[1]) or None
-        else:
-            pieces.append(s)
-    # lidwoord-split: een tweede stuk dat opnieuw 'journal = {' opent hoort bij het eerste
-    joined = ''
-    for p in pieces:
-        opens = re.match(r'^\s*journal\s*=\s*\{', p, re.I)
-        if opens:
-            p = p[opens.end():]
-            joined = joined + (' ' if joined else '') + p
-        else:
-            joined += p
-    result = {'journal': None, 'volume': None, 'year': None, 'issue': None, 'pages': None, 'material': material}
-    if ' ; ' not in joined + ' ':
-        result['journal'] = clean(joined.rstrip('}, ')) or None
-        return result
-    title, _, rest = (joined + ' ').rpartition(' ; ')
-    result['journal'] = clean(title) or None
-    rest = rest.strip().rstrip(',').rstrip('}').strip().rstrip(',').strip()
-    m = re.match(r'^(?P<volume>[^(),]*?)\s*(?:\((?P<year>[^)]*)\))?\s*(?:,\s*(?P<tail>.*))?$', rest)
-    if not m:
-        return result
-    result['volume'] = clean(m.group('volume')) or None
-    result['year'] = year_of(m.group('year'))
-    tail = clean(m.group('tail'))
-    if tail:
-        items = [clean(i) for i in tail.split(',') if clean(i)]
-        # een bereik als eerste item ('8-9, 12') is een paginering, geen aflevering
-        if len(items) > 1 and '-' not in items[0]:
-            result['issue'] = items[0]
-            result['pages'] = ', '.join(items[1:])
-        else:
-            result['pages'] = ', '.join(items)
-    return result
-
-
-def transform_article(graph: Graph, config: dict, header: dict, fields: dict, source: dict,
-                      record=None) -> URIRef:
-    """Artikel -> schema:Article (en schema:CreativeWork). `fields` komt uit de OAI, `record` (optioneel) uit het API.
-
-    API Title                    -> schema:name (@nl); zonder API-record ontbreekt de titel (er wordt niets verzonnen)
-    API Author, Corporate_author -> schema:author + schema:creator; zonder API: OAI 'author = {..}'
-    API subjects, places, notes  -> zoals bij boeken (schema:about, schema:spatialCoverage, schema:description)
-    OAI dc:source 'journal = {..}' -> keten schema:isPartOf: PublicationIssue -> PublicationVolume -> Periodical
+    Title/lead_word + title        -> schema:name (@nl)
+    Author, Corporate_author       -> schema:author + schema:creator
+    subjects, places, notes        -> zoals bij boeken (schema:about, schema:spatialCoverage, schema:description)
+    Source/source.title (+ lead_word) -> keten schema:isPartOf: PublicationIssue -> PublicationVolume -> Periodical
                                       (alleen de niveaus waarvoor gegevens zijn)
-    OAI pagina's                 -> schema:pageStart / schema:pageEnd, anders schema:pagination
-    OAI 'Source.materiaal'       -> schema:additionalType (DefinedTerm) op de Periodical
-    OAI 'year = {..}'            -> schema:datePublished (xsd:gYear)
-    OAI 'notes = {..}'           -> schema:description (@nl)
+    Source/source.title.lref       -> het adres van de Periodical (het priref van het tijdschriftrecord) en zijn catalogus-url
+    Source/source.volume, .issue   -> schema:volumeNumber, schema:issueNumber
+    Source/source.pagination       -> schema:pageStart / schema:pageEnd, anders schema:pagination
+    Source/source.material_type    -> schema:additionalType (DefinedTerm) op de Periodical
+    search_year (anders het jaar van het tijdschrift) -> schema:datePublished (xsd:gYear)
+
+    Niet gepubliceerd: shelf_mark, input.*, Edit (gebruikersnamen), record_access.owner, acquisition_date.
     """
-    priref = record_priref(header['identifier'])
-    modified = (record.get('modification') if record is not None else None) or header['datestamp']
-    work = _start_record(graph, config, 'article', priref, [SDO.Article, SDO.CreativeWork], modified)
+    priref = record.get('priref')
+    work = _start_record(graph, config, 'article', priref, [SDO.Article, SDO.CreativeWork], record.get('modification'))
     _add_url(graph, work, source.get('catalog_url'), priref)
 
-    oai_authors = list(dict.fromkeys(a for a in (bibtex_value(v, 'author') for v in fields.get('dc:creator', [])) if a))
-    oai_notes = [n for n in (bibtex_value(v, 'notes') for v in fields.get('dc:notes', [])) if n]
-    if record is not None:
-        name = _api_title(record)
-        if name:
-            graph.add((work, SDO.name, Literal(name, lang='nl')))
-        persons = adlib.texts(record, 'Author/author.name') or oai_authors
-        _add_authors(graph, config, work, persons, adlib.texts(record, 'Corporate_author/corporate_author'))
-        _add_api_description(graph, config, work, record, extra_notes=oai_notes)
-    else:
-        _add_authors(graph, config, work, oai_authors, [])
-        for note in dict.fromkeys(oai_notes):
-            graph.add((work, SDO.description, Literal(note, lang='nl')))
+    name = _api_title(record)
+    if name:                                   # zonder titel in de bron geen schema:name: er wordt niets verzonnen
+        graph.add((work, SDO.name, Literal(name, lang='nl')))
+    _add_authors(graph, config, work, adlib.texts(record, 'Author/author.name'),
+                 adlib.texts(record, 'Corporate_author/corporate_author'))
+    _add_api_description(graph, config, work, record)
 
-    src = parse_article_source(fields.get('dc:source', []))
-    year = year_of(next((bibtex_value(v, 'year') for v in fields.get('dc:date', []) if bibtex_value(v, 'year')), None)) \
-        or src['year']
+    src = article_source(record) or {k: None for k in ('journal', 'lref', 'volume', 'issue', 'year', 'pages', 'material')}
+    year = year_of(adlib.first(record, 'search_year')) or src['year']
     if year:
         graph.add((work, SDO.datePublished, Literal(year, datatype=XSD.gYear)))
 
@@ -399,27 +334,30 @@ def transform_article(graph: Graph, config: dict, header: dict, fields: dict, so
     pages = src['pages']
     if pages:
         m = re.fullmatch(r'(\d+)\s*-\s*(\d+)', pages)
-        single = re.fullmatch(r'\d+', pages)
         if m:
             graph.add((work, SDO.pageStart, Literal(m.group(1), datatype=XSD.string)))
             graph.add((work, SDO.pageEnd, Literal(m.group(2), datatype=XSD.string)))
-        elif single:
+        elif re.fullmatch(r'\d+', pages):
             graph.add((work, SDO.pageStart, Literal(pages, datatype=XSD.string)))
             graph.add((work, SDO.pageEnd, Literal(pages, datatype=XSD.string)))
         else:
             graph.add((work, SDO.pagination, Literal(pages, datatype=XSD.string)))
 
-    # tijdschrift -> jaargang/deel -> aflevering
+    # tijdschrift -> jaargang/deel -> aflevering. Het tijdschrift heeft het adres van zijn eigen record (lref);
+    # ontbreekt dat, dan valt het terug op de naam.
     journal = src['journal']
     if journal:
-        periodical = _node(config, f'periodical/{journal}', 'periodical')
+        key = src['lref'] or journal
+        periodical = _node(config, f'periodical/{key}', 'periodical')
         graph.add((periodical, RDF.type, SDO.Periodical))
         graph.add((periodical, SDO.name, Literal(journal, lang='nl')))
+        if src['lref']:
+            _add_url(graph, periodical, source.get('catalog_url'), src['lref'])
         if src['material']:
             _add_named(graph, config, periodical, SDO.additionalType, src['material'], 'term', [SDO.DefinedTerm])
         container = periodical
         if src['volume'] or src['year']:
-            volume = _node(config, f"volume/{journal}/{src['volume'] or ''}/{src['year'] or ''}", 'publicationvolume')
+            volume = _node(config, f"volume/{key}/{src['volume'] or ''}/{src['year'] or ''}", 'publicationvolume')
             graph.add((volume, RDF.type, SDO.PublicationVolume))
             if src['volume']:
                 graph.add((volume, SDO.volumeNumber, Literal(src['volume'], datatype=XSD.string)))
@@ -428,7 +366,7 @@ def transform_article(graph: Graph, config: dict, header: dict, fields: dict, so
             graph.add((volume, SDO.isPartOf, periodical))
             container = volume
         if src['issue']:
-            issue = _node(config, f"issue/{journal}/{src['volume'] or ''}/{src['year'] or ''}/{src['issue']}",
+            issue = _node(config, f"issue/{key}/{src['volume'] or ''}/{src['year'] or ''}/{src['issue']}",
                           'publicationissue')
             graph.add((issue, RDF.type, SDO.PublicationIssue))
             graph.add((issue, SDO.issueNumber, Literal(src['issue'], datatype=XSD.string)))

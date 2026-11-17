@@ -37,8 +37,10 @@ def test_real_articles_have_no_violations(articles):
     assert 'Article: schema:name ontbreekt (de bron levert geen artikeltitel).' not in result['Warning']
 
 
-def test_article_only_in_oai_has_no_title_which_is_a_warning(build_articles):
-    result = check(build_articles(with_api=False))
+def test_article_without_title_in_the_source_is_a_warning(articles, config):
+    for article in list(articles.subjects(RDF.type, SDO.Article)):
+        articles.remove((article, SDO.name, None))
+    result = check(articles)
     assert sum(result['Violation'].values()) == 0
     assert result['Warning']['Article: schema:name ontbreekt (de bron levert geen artikeltitel).'] == 6
 
@@ -87,7 +89,7 @@ def test_name_without_language_is_a_violation(books, config):
 
 
 def test_volume_without_periodical_is_a_violation(articles, config):
-    art = node_for(config, 'article', '200000001')
+    art = node_for(config, 'article', '200000011')          # alleen een jaargang, geen aflevering
     volume = next(v for v in articles.objects(art, SDO.isPartOf) if (v, RDF.type, SDO.PublicationVolume) in articles)
     articles.remove((volume, SDO.isPartOf, None))
     assert check(articles)['Violation']['PublicationVolume: schema:isPartOf moet verwijzen naar een schema:Periodical.'] == 1
