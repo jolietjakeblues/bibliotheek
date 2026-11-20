@@ -71,6 +71,10 @@ MAX_MISSING_IN_API: 0
 # aantal te publiceren records dat het API zelf niet kan uitleveren omdat het record in de bron fout staat (bijvoorbeeld
 # een tekst in een getalveld). Ze worden overgeslagen en met priref in het manifest genoemd; meld ze bij de beheerder.
 MAX_UNREADABLE_IN_API: 10
+# aantal boeken zonder titel in het API (lege records in de bron: alleen een priref). Ze worden niet gepubliceerd, want schema:name
+# is voor een Book verplicht, en staan met priref in het manifest. Gemeten op 20 november: 18 van 216.887. Een veel hoger aantal
+# betekent dat de API-alias de titel niet teruggeeft; de run faalt dan.
+MAX_EMPTY_IN_API: 50
 # percentage artikelen met een tijdschrift dat geen `source.title.lref` (adres van het tijdschriftrecord) heeft. Gemeten: 0%.
 # Een hoog percentage betekent dat de API-alias dat veld niet teruggeeft; de run faalt dan.
 MAX_UNLINKED_JOURNAL_PERCENT: 2

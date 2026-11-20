@@ -197,6 +197,58 @@ def test_unreadable_book_with_scope_api_balances(monkeypatch, tmp_path):
     assert m['written'] == 14 and m['intended'] == 15 and m['unreadable_ids'] == ['7']
 
 
+def _without_title(monkeypatch, empty):
+    """Maak van de opgegeven records lege schillen, zoals in de bron (alleen een priref)."""
+    real = adlib_client.fetch_page
+
+    def emptied(*a, **k):
+        page = real(*a, **k)
+        for record in page.findall('.//recordList/record'):
+            if record.get('priref') in empty:
+                for child in list(record):
+                    if child.tag != 'priref':
+                        record.remove(child)
+        return page
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', emptied)
+
+
+def test_book_without_title_is_not_published_but_named_and_counted(monkeypatch, tmp_path):
+    # gevonden op 20 november: 18 lege records in het API; schema:name is voor een Book verplicht, de SHACL-validatie liet de run falen
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), MAX_EMPTY_IN_API=2)
+    _without_title(monkeypatch, {'7', '8'})
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['complete'] is True and m['written'] == 23 and m['empty'] == 2 and m['empty_ids'] == ['7', '8']
+    assert m['intended'] == 25 and m['errors'] == 0
+    data = ''.join(p.read_text(encoding='utf-8') for p in (tmp_path / 'out').glob('books-*.jsonld'))
+    assert 'Titel 9' in data and 'Titel 6' in data
+
+
+def test_book_without_title_balances_with_scope_api(monkeypatch, tmp_path):
+    _setup(monkeypatch, tmp_path, 'books', ids=[], api_ids=range(1, 16), MAX_EMPTY_IN_API=1)
+    cfg = yaml.safe_load((tmp_path / 'config.yml').read_text())
+    cfg['SOURCES']['books']['scope'] = 'api'
+    (tmp_path / 'config.yml').write_text(yaml.safe_dump(cfg))
+    _without_title(monkeypatch, {'3'})
+    assert run('books') == 0
+    m = manifest(tmp_path, 'books')
+    assert m['written'] == 14 and m['intended'] == 15 and m['empty_ids'] == ['3']
+
+
+def test_many_books_without_title_fail_the_run(monkeypatch, tmp_path):
+    # bijna alle boeken leeg betekent een kapotte veldenlijst of alias, geen 'lege records in de bron'
+    _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), MAX_EMPTY_IN_API=2)
+    _without_title(monkeypatch, {str(i) for i in range(1, 20)})
+    assert run('books') == 1
+    assert manifest(tmp_path, 'books')['empty'] == 19
+
+
+def test_config_allows_the_empty_books_found_in_the_catalogue():
+    with open(ROOT / 'config' / 'config.yml', encoding='utf-8') as f:
+        assert yaml.safe_load(f)['MAX_EMPTY_IN_API'] >= 18
+
+
 def test_unreadable_record_outside_the_selection_is_harmless(monkeypatch, tmp_path):
     # het API heeft 30 records, de OAI publiceert er 25; record 28 is kapot maar wordt toch niet gepubliceerd
     _setup(monkeypatch, tmp_path, 'books', ids=range(1, 26), api_ids=range(1, 31), MAX_UNREADABLE_IN_API=0)

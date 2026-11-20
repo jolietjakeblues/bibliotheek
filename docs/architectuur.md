@@ -113,6 +113,7 @@ De run faalt, en publiceert dan niets, bij elk van deze gevallen:
 | Ontbrekend in API | meer dan `MAX_MISSING_IN_API` records (standaard 0) |
 | Tijdschriftadres | meer dan `MAX_UNLINKED_JOURNAL_PERCENT` procent van de artikelen met een tijdschrift heeft geen `source.title.lref` (standaard 2) |
 | Onleesbaar in API | meer dan `MAX_UNREADABLE_IN_API` te publiceren records die het API zelf niet kon leveren (standaard 10) |
+| Boeken zonder titel | meer dan `MAX_EMPTY_IN_API` boeken zonder titel in het API (standaard 50); die boeken worden niet gepubliceerd en staan in `empty_ids` |
 | Transformatiefouten | meer dan `MAX_RECORD_ERRORS` records (standaard 0) |
 | SHACL | minstens één **Violation** in een chunk |
 

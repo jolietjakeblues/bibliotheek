@@ -16,6 +16,7 @@ Controles (de run faalt, zodat er niets gepubliceerd wordt):
   - weggeschreven + fouten == wat we wilden schrijven (niets raakt stilzwijgend kwijt);
   - records die de OAI publiceert maar het API niet kent blijven binnen MAX_MISSING_IN_API;
   - records die het API zelf niet kan uitleveren (kapot in de bron) blijven binnen MAX_UNREADABLE_IN_API en staan in het manifest;
+  - boeken zonder titel (lege records in de bron) worden niet gepubliceerd, blijven binnen MAX_EMPTY_IN_API en staan in het manifest;
   - artikelen met een tijdschrift hebben (op MAX_UNLINKED_JOURNAL_PERCENT na) het adres van dat tijdschrift;
   - het aantal transformatiefouten blijft binnen MAX_RECORD_ERRORS.
 """
@@ -86,7 +87,7 @@ def new_state() -> dict:
     return {'oai_seen': 0, 'oai_expected': None, 'oai_windows': None, 'with_journal': 0, 'journal_without_link': 0, 'api_seen': 0, 'api_hits': None, 'api_hits_end': None, 'skipped': 0, 'skipped_reasons': {},
             'errors': 0, 'error_ids': [], 'api_duplicates': 0, 'written': 0, 'files': 0, 'out_of_scope': 0, 'missing_in_api': 0,
             'missing_ids': [], 'intended': 0, 'limited': False, 'api_unreadable': 0, 'unreadable_ids': [],
-            'unreadable_in_scope': 0}
+            'unreadable_in_scope': 0, 'empty': 0, 'empty_ids': []}
 
 
 def _skip(state: dict, reason: str):
@@ -202,7 +203,14 @@ def harvest_records(config: dict, source: dict, writer: ChunkWriter, state: dict
             if journal:
                 state['with_journal'] += 1
                 state['journal_without_link'] += not journal['lref']
-        writer.add(transform, record, source)
+        if source['kind'] == 'book' and not transform_service.has_title(record):
+            # een boek zonder titel is niet te publiceren (schema:name is verplicht) en zou de SHACL-validatie laten falen;
+            # het wordt niet verzwegen maar met priref in het manifest genoemd en telt mee in de rekensom
+            state['empty'] += 1
+            if len(state['empty_ids']) < 200:
+                state['empty_ids'].append(priref)
+        else:
+            writer.add(transform, record, source)
         if api_state['seen'] % 5000 == 0:
             logger.info('%s: %d/%s API-records verwerkt', source['kind'], api_state['seen'], api_state.get('hits'))
     _count_api(state, api_state, scope)
@@ -228,7 +236,7 @@ def harvest_source(config: dict, source_name: str, cache_path: str, chunk_size: 
 
 
 def verify_completeness(state: dict, source: dict, max_record_errors: int, max_missing: int, max_unreadable: int = 0,
-                        max_unlinked_percent: float = 100.0) -> bool:
+                        max_unlinked_percent: float = 100.0, max_empty: int = 0) -> bool:
     """Vergelijk wat we gezien en verwerkt hebben met wat de bronnen aankondigen."""
     if state['limited']:
         logger.info('Beperkte run (--max-records): volledigheidscontrole overgeslagen.')
@@ -259,7 +267,7 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
         logger.warning('De bron groeide tijdens de oogst: %s records aan het begin, %s aan het eind; %d opgehaald.',
                        state['api_hits'], state['api_hits_end'], state['api_seen'] + state['api_unreadable'])
     # wat de OAI publiceert maar het API niet kent of niet kon uitleveren, wordt niet geschreven
-    not_written = state['missing_in_api'] + state['unreadable_in_scope']
+    not_written = state['missing_in_api'] + state['unreadable_in_scope'] + state['empty']
     if state['written'] + state['errors'] + not_written != state['intended']:
         logger.error('Rekenfout: weggeschreven (%d) + fouten (%d) + niet in API (%d) != beoogd (%d).',
                      state['written'], state['errors'], not_written, state['intended'])
@@ -279,6 +287,13 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
         logger.error('%d te publiceren records waren in het API onleesbaar (toegestaan: %d): %s',
                      state['unreadable_in_scope'], max_unreadable, ', '.join(state['unreadable_ids'][:20]))
         ok = False
+    if state['empty']:
+        logger.warning('%d boeken hebben in het API geen titel en worden niet gepubliceerd: %s', state['empty'],
+                       ', '.join(state['empty_ids'][:20]))
+    if state['empty'] > max_empty:
+        logger.error('%d boeken zonder titel in het API (toegestaan: %d): %s. Veel lege records wijzen op een veldenlijst of '
+                     'API-alias die de titel niet teruggeeft.', state['empty'], max_empty, ', '.join(state['empty_ids'][:20]))
+        ok = False
     if state['errors'] > max_record_errors:
         logger.error('%d records konden niet getransformeerd worden (toegestaan: %d): %s', state['errors'],
                      max_record_errors, ', '.join(map(str, state['error_ids'][:20])))
@@ -292,8 +307,9 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
 
 def write_manifest(cache_path: str, source_name: str, state: dict, complete: bool):
     keys = ('oai_seen', 'oai_expected', 'oai_windows', 'api_seen', 'api_hits', 'api_hits_end', 'api_duplicates', 'intended', 'written', 'files', 'errors', 'skipped',
-            'skipped_reasons', 'out_of_scope', 'missing_in_api', 'api_unreadable', 'unreadable_in_scope', 'with_journal', 'journal_without_link')
+            'skipped_reasons', 'out_of_scope', 'missing_in_api', 'api_unreadable', 'unreadable_in_scope', 'empty', 'with_journal', 'journal_without_link')
     manifest = {k: state.get(k) for k in keys}
+    manifest['empty_ids'] = state.get('empty_ids', [])[:200]
     manifest['source'] = source_name
     manifest['error_ids'] = state.get('error_ids', [])[:200]
     manifest['missing_ids'] = state.get('missing_ids', [])[:200]
@@ -329,7 +345,8 @@ def main(argv=None) -> int:
         state = harvest_source(config, name, cache_path, args.chunks, args.max_records)
         complete = verify_completeness(state, config['SOURCES'][name], int(config.get('MAX_RECORD_ERRORS', 0)),
                                        int(config.get('MAX_MISSING_IN_API', 0)), int(config.get('MAX_UNREADABLE_IN_API', 0)),
-                                       float(config.get('MAX_UNLINKED_JOURNAL_PERCENT', 100)))
+                                       float(config.get('MAX_UNLINKED_JOURNAL_PERCENT', 100)),
+                                       int(config.get('MAX_EMPTY_IN_API', 0)))
         write_manifest(cache_path, name, state, complete)
         all_ok = all_ok and complete
     return 0 if all_ok else 1
