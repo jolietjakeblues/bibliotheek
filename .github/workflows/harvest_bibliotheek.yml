@@ -55,7 +55,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
-      fail-fast: true
+      # false: een mislukte bron breekt de andere niet af, zodat elke run van beide bronnen een uitkomst geeft. Publiceren blijft
+      # geblokkeerd: `publish` wacht op de hele job en draait niet als één bron mislukt (20 november: de artikelen faalden, de
+      # boeken werden daardoor na 14 minuten geannuleerd).
+      fail-fast: false
       matrix:
         source: [books, article]
     steps:

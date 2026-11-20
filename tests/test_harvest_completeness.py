@@ -273,6 +273,45 @@ def test_scope_api_for_articles_does_not_need_the_oai(monkeypatch, tmp_path):
     assert m['written'] == 15 and m['out_of_scope'] == 0 and m['oai_seen'] == 0 and m['complete'] is True
 
 
+def _api_scope(tmp_path, source):
+    cfg = yaml.safe_load((tmp_path / 'config.yml').read_text())
+    cfg['SOURCES'][source]['scope'] = 'api'
+    (tmp_path / 'config.yml').write_text(yaml.safe_dump(cfg))
+
+
+def _growing_api(monkeypatch, first_ids, later_ids):
+    """Het API kondigt bij de eerste pagina len(first_ids) aan; daarna zijn er records bijgekomen (later_ids, achteraan)."""
+    first_ids, later_ids, calls = list(first_ids), list(later_ids), []
+
+    def fake(base, database, search, start, limit, retries=5, backoff=2.0, fields=None):
+        ids, hits = (first_ids, len(first_ids)) if not calls else (later_ids, len(later_ids))
+        calls.append(start)
+        records = ''.join(f'<record priref="{i}" modification="2026-01-01T00:00:00"><priref>{i}</priref>'
+                          f'<Title><title>Titel {i}</title></Title></record>' for i in ids[start - 1:start - 1 + limit])
+        return ET.fromstring(f'<adlibXML><recordList>{records}</recordList><diagnostic><hits>{hits}</hits></diagnostic></adlibXML>')
+
+    monkeypatch.setattr(adlib_client, 'fetch_page', fake)
+
+
+def test_source_that_grows_during_the_run_is_still_complete(monkeypatch, tmp_path):
+    # gebeurd op 20 november: 120.456 aangekondigd, 120.457 opgehaald omdat er tijdens de run een artikel bijkwam
+    _setup(monkeypatch, tmp_path, 'article', ids=[])
+    _api_scope(tmp_path, 'article')
+    _growing_api(monkeypatch, range(200000001, 200000016), range(200000001, 200000017))
+    assert run('article') == 0
+    m = manifest(tmp_path, 'article')
+    assert m['written'] == 16 and m['api_hits'] == 15 and m['api_hits_end'] == 16 and m['complete'] is True
+
+
+def test_source_that_loses_records_during_the_run_fails(monkeypatch, tmp_path):
+    # een record dat verdwijnt schuift de paginering op; dan missen we er een
+    _setup(monkeypatch, tmp_path, 'article', ids=[])
+    _api_scope(tmp_path, 'article')
+    _growing_api(monkeypatch, range(200000001, 200000016), range(200000001, 200000015))
+    assert run('article') == 1
+    assert manifest(tmp_path, 'article')['complete'] is False
+
+
 def test_config_publishes_everything_the_api_returns():
     cfg = yaml.safe_load((ROOT / 'config' / 'config.yml').read_text(encoding='utf-8'))
     assert {name: s['scope'] for name, s in cfg['SOURCES'].items()} == {'books': 'api', 'article': 'api'}

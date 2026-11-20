@@ -9,6 +9,10 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
   de OAI-sets laten ongeveer 156.000 records weg (94.190 artikelen zonder `source.Repository`, ongeveer 61.500 boekrecords zonder exemplaar)
   en het doel is een zo compleet mogelijke dataset, zodat het oude model kan vervallen. Nog niet gedraaid; zie `docs/besluiten.md`.
 - De volledigheidscontrole eist bij `scope: api` ook voor artikelen geen OAI-teller meer.
+- De volledigheidscontrole van het API accepteert een catalogus die tijdens de oogst groeit. De eerste volledige run met `scope: api` mislukte
+  na 13 minuten op "bron kondigt 120456 records aan, 120457 opgehaald": er was in die tijd een artikel bijgekomen. Het aantal treffers
+  wordt nu ook aan het eind opgehaald (`api_hits_end` in het manifest) en telt mee als de bron gegroeid is. Kromp hij, dan blijft de run falen.
+- GitHub Action: `fail-fast: false` bij de oogst. Een mislukte bron annuleert de andere niet meer; publiceren blijft geblokkeerd zolang een bron mislukt.
 - Verwijzingen naar het "CN-profiel" vervangen door het NDE-applicatieprofiel.
 
 ## 2026-11-13
