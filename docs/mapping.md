@@ -40,7 +40,7 @@ mapping, dan faalt die test tot de voorbeelden opnieuw zijn gemaakt.
 | `pagination`, `illustrations`, `dimensions` | `schema:size` (tekst, `;`-gescheiden) en `schema:numberOfPages` | aantal pagina's alleen als `pagination` een los getal is (`96 p`, `57 pagina's`) |
 | `edition` | `schema:bookEdition` @nl | |
 | `Keyword/keyword.contents` | `schema:about` → `DefinedTerm` | trefwoorden als tekst, gedeeld per tekst |
-| `Content_subject/RNA_URI` | `schema:about` → CHT-IRI | rechtstreeks de IRI; het label staat in de CHT-graph van dezelfde dataset |
+| `Content_subject/RNA_URI` | `schema:about` → thesaurus-IRI (CHT, ABR, RN) | rechtstreeks de IRI; het label staat in de thesaurus-graph van dezelfde dataset. Adlib levert ABR en RN zonder versie (`…/term/id/abr/<uuid>`); bestaat de uuid in ABR 2 of RN 2, dan wordt het `…/abr/2/<uuid>` of `…/rn/2/<uuid>`, eerst in de eigen thesaurus en dan in de andere (zie `THESAURUS_V2_PATH` in [configuratie.md](configuratie.md)). Zonder versie 2 blijft de URI uit de bron |
 | `Person_keyword` | `schema:about` → `Person` of `Organization` | |
 | `geographical_keyword`, `monument.*` | `schema:spatialCoverage` → `Place` | land, provincie, gemeente, plaats en monumentnaam |
 | `Monumentnumber` | `schema:about` → `schema:LandmarksOrHistoricalBuildings` | zie "Monumenten" |

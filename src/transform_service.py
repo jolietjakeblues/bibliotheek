@@ -8,7 +8,11 @@ Bronnen:
 De mapping staat in de docstrings van `transform_book` en `transform_article` en in README.md.
 Elk record neemt al zijn eigen nodes mee, zodat een uitvoerbestand (chunk) op zichzelf valideerbaar is.
 """
+import gzip
+import json
 import re
+from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 
 from rdflib import Graph, Literal, URIRef
@@ -34,6 +38,9 @@ _ORG_START = re.compile(r'^(ministerie|gemeente|provincie|stichting|vereniging|r
 _YEAR = re.compile(r'(?<!\d)(\d{4})(?!\d)')
 _PAGES_ONLY = re.compile(r"^\s*(\d+)\s*(?:p\.?|pp\.?|pag\.?|pagina'?s|blz\.?)?\s*$", re.I)
 _ISBN_PREFIX = re.compile(r'^\s*ISBN\b:?\s*', re.I)
+# ABR- of RN-URI zonder versie, zoals Adlib die levert: …/term/id/abr/<uuid> of …/term/id/rn/<uuid>
+_THESAURUS_V1 = re.compile(r'^https://data\.cultureelerfgoed\.nl/term/id/(abr|rn)/'
+                           r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$')
 
 
 def clean(value: Optional[str]) -> str:
@@ -70,6 +77,33 @@ def normalize_isbn(value: str) -> Optional[str]:
 
 def _node(config: dict, key: str, kind: str) -> URIRef:
     return uris.get_object_uri(config['BASE_URI'], config['COLLECTION_ID'], key, kind)
+
+
+@lru_cache(maxsize=4)
+def _thesaurus_v2(path: str) -> dict:
+    """{'abr': {uuid, ...}, 'rn': {uuid, ...}}: de begrippen van ABR 2 en RN 2, gemaakt door tools/maak_thesaurus_v2.py."""
+    full = Path(path) if Path(path).is_absolute() else Path(__file__).resolve().parent.parent / path
+    if not full.exists():
+        return {}
+    with gzip.open(full, 'rt', encoding='utf-8') as f:
+        return {ns: set(uuids) for ns, uuids in json.load(f)['concepts'].items()}
+
+
+def thesaurus_uri(config: dict, uri: str) -> str:
+    """De geldende URI van een thesaurusbegrip. Adlib levert ABR en RN zonder versie (`…/abr/<uuid>`); bestaat dezelfde uuid
+    in ABR 2 of RN 2, dan wordt het `…/abr/2/<uuid>` of `…/rn/2/<uuid>`. Eerst in de eigen thesaurus, dan in de andere: Adlib
+    zet sommige RN-begrippen onder het ABR (`…/abr/64e9fcac-…` is in RN 2 "begraving"). Anders (geen versie 2, of een andere
+    thesaurus zoals de CHT) blijft de URI uit de bron staan: er wordt nooit naar een begrip verwezen dat niet bestaat."""
+    m = _THESAURUS_V1.match(uri)
+    path = config.get('THESAURUS_V2_PATH')
+    if not m or not path:
+        return uri
+    ns, uuid = m.groups()
+    concepts = _thesaurus_v2(path)
+    for kandidaat in (ns, 'rn' if ns == 'abr' else 'abr'):
+        if uuid in concepts.get(kandidaat, ()):
+            return f'https://data.cultureelerfgoed.nl/term/id/{kandidaat}/2/{uuid}'
+    return uri
 
 
 def organization_node(config: dict, name: str) -> URIRef:
@@ -152,10 +186,11 @@ def _add_api_description(graph: Graph, config: dict, work: URIRef, record):
     """Velden die boeken en artikelen in het API-record delen: onderwerpen, plaatsen, monumenten, notities."""
     for keyword in adlib.texts(record, 'Keyword/keyword.contents'):
         _add_named(graph, config, work, SDO.about, keyword, 'term', [SDO.DefinedTerm])
-    # CHT-term: rechtstreeks de IRI; het label staat in de thesaurus-graph van dezelfde dataset
+    # Thesaurusbegrip (CHT, ABR, RN): rechtstreeks de IRI, ABR en RN in de geldende versie 2; het label staat in de
+    # thesaurus-graph van dezelfde dataset
     for uri in adlib.texts(record, 'Content_subject/RNA_URI'):
         if uri.startswith(('http://', 'https://')) and uris.is_valid_uri(uri):
-            graph.add((work, SDO.about, URIRef(uri)))
+            graph.add((work, SDO.about, URIRef(thesaurus_uri(config, uri))))
     for name in adlib.texts(record, 'Person_keyword/person.keyword.name'):
         graph.add((work, SDO.about, _agent(graph, config, name)))
 
@@ -212,7 +247,7 @@ def transform_book(graph: Graph, config: dict, record, source: dict) -> URIRef:
     pagination, illustrations, dimensions -> schema:size (tekst) en schema:numberOfPages (alleen een los aantal)
     edition                            -> schema:bookEdition
     Keyword/keyword.contents           -> schema:about (DefinedTerm)
-    Content_subject/RNA_URI            -> schema:about (CHT-IRI)
+    Content_subject/RNA_URI            -> schema:about (CHT-IRI; ABR en RN in versie 2 als die bestaat)
     Person_keyword                     -> schema:about (Person/Organization)
     geographical_keyword, monument.*   -> schema:spatialCoverage (Place)
     Monumentnumber                     -> schema:about (LandmarksOrHistoricalBuildings met rijksmonumentnummer)

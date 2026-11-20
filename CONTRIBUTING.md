@@ -26,7 +26,7 @@ De tests gebruiken geen netwerk: de bronnen worden nagebootst, en de inhoud komt
 | `shacl/` | de shapes |
 | `config/` | de instellingen; zie [docs/configuratie.md](docs/configuratie.md) |
 | `tests/` | `test_transform_*` (mapping), `test_*_client` (OAI en API), `test_harvest_completeness` (volledigheid en foutgevallen), `test_shacl` (shapes, ook negatief), `test_docs` (documentatie klopt met de code) |
-| `tools/` | `maak_voorbeelden.py` genereert `docs/voorbeelden/` |
+| `tools/` | `maak_voorbeelden.py` genereert `docs/voorbeelden/`; `maak_thesaurus_v2.py` maakt de lijst met begrippen van ABR 2 en RN 2 |
 | `docs/` | documentatie |
 
 ## Een wijziging in de mapping

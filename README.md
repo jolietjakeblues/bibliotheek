@@ -112,6 +112,7 @@ src/                                        oai_client, adlib_client, transform_
                                             validate_service, uris
 shacl/bibliotheek.shacl.ttl                 de shapes
 tools/maak_voorbeelden.py                   genereert docs/voorbeelden/ uit de testrecords
+tools/maak_thesaurus_v2.py                  maakt config/thesaurus_v2.json.gz (begrippen van ABR 2 en RN 2)
 tests/                                      pytest; echte records in tests/fixtures/
 docs/                                       documentatie en voorbeelden
 ```

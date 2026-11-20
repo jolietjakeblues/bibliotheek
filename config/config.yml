@@ -11,6 +11,11 @@ DATASET_DESCRIPTION: 'Boeken en tijdschriftartikelen uit de catalogus van de bib
 # Licentie van de metadata (IRI). Leeg = geen schema:license opnemen. Nog te besluiten.
 LICENSE_URI: ''
 
+# Lijst met de begrippen van ABR 2 en RN 2. Adlib levert ABR- en RN-URI's zonder versie (…/abr/<uuid>); staat de uuid in deze
+# lijst, dan wordt het …/abr/2/<uuid> of …/rn/2/<uuid>. Vernieuwen met tools/maak_thesaurus_v2.py. Ontbrekend bestand of
+# leeg = URI's ongewijzigd uit de bron.
+THESAURUS_V2_PATH: 'config/thesaurus_v2.json.gz'
+
 ### Adlib-API: volledige records ###
 SRC_API: 'https://rce.adlibhosting.com/harvest/wwwopac.ashx'
 SRC_API_DATABASE: 'books'      # standaard-alias; een bron kan met api_database een andere kiezen
