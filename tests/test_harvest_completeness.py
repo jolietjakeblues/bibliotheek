@@ -54,7 +54,7 @@ def _setup(monkeypatch, tmp_path, source, ids, oai_announced=None, api_ids=None,
     with open(ROOT / 'config' / 'config.yml', encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
     cfg.update({'SRC_API_LIMIT': 10, 'SRC_API_WORKERS': 2, 'SRC_SLEEP': 0, 'SRC_OAI_WORKERS': 1, **config_overrides})
-    cfg['SOURCES'][source].setdefault('scope', 'oai')
+    cfg['SOURCES'][source]['scope'] = 'oai'      # de tests hieronder gaan uit van een OAI-selectie; scope 'api' zetten ze zelf
     cfg_path = tmp_path / 'config.yml'
     cfg_path.write_text(yaml.safe_dump(cfg), encoding='utf-8')
     monkeypatch.setenv('CONFIG_PATH', str(cfg_path))
@@ -260,6 +260,22 @@ def test_scope_api_publishes_everything_the_search_returns(monkeypatch, tmp_path
     cfg['SOURCES']['books']['scope'] = 'api'
     (tmp_path / 'config.yml').write_text(yaml.safe_dump(cfg))
     assert run('books') == 0 and manifest(tmp_path, 'books')['written'] == 15
+
+
+def test_scope_api_for_articles_does_not_need_the_oai(monkeypatch, tmp_path):
+    # artikelen zonder `source.Repository` staan niet in de OAI-set `article`, maar wel in het API (besluit 10)
+    _setup(monkeypatch, tmp_path, 'article', ids=range(200000001, 200000004), api_ids=range(200000001, 200000016))
+    cfg = yaml.safe_load((tmp_path / 'config.yml').read_text())
+    cfg['SOURCES']['article']['scope'] = 'api'
+    (tmp_path / 'config.yml').write_text(yaml.safe_dump(cfg))
+    assert run('article') == 0
+    m = manifest(tmp_path, 'article')
+    assert m['written'] == 15 and m['out_of_scope'] == 0 and m['oai_seen'] == 0 and m['complete'] is True
+
+
+def test_config_publishes_everything_the_api_returns():
+    cfg = yaml.safe_load((ROOT / 'config' / 'config.yml').read_text(encoding='utf-8'))
+    assert {name: s['scope'] for name, s in cfg['SOURCES'].items()} == {'books': 'api', 'article': 'api'}
 
 
 def test_limited_run_skips_completeness_check(monkeypatch, tmp_path):

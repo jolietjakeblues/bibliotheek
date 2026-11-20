@@ -20,7 +20,7 @@ def book(config, priref):
 def test_all_real_records_become_books(books_graph):
     books = set(books_graph.subjects(RDF.type, SDO.Book))
     assert len(books) == 11
-    assert books == set(books_graph.subjects(RDF.type, SDO.CreativeWork))   # CN-profiel toetst op CreativeWork
+    assert books == set(books_graph.subjects(RDF.type, SDO.CreativeWork))   # NDE-applicatieprofiel gaat uit van CreativeWork
 
 
 def test_leading_word_is_joined_to_title(books_graph, config):

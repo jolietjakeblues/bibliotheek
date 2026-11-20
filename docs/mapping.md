@@ -17,7 +17,7 @@ mapping, dan faalt die test tot de voorbeelden opnieuw zijn gemaakt.
 
 | Eigenschap | Waarde |
 |---|---|
-| `rdf:type` | `schema:Book` of `schema:Article`, plus `schema:CreativeWork` (het CN-profiel toetst op `CreativeWork`) |
+| `rdf:type` | `schema:Book` of `schema:Article`, plus `schema:CreativeWork` (het NDE-applicatieprofiel gaat uit van `CreativeWork`) |
 | `schema:isPartOf` | de dataset, `https://linkeddata.cultureelerfgoed.nl/rce/bibliotheek/` |
 | `schema:sdPublisher` | de RCE |
 | `schema:sdDatePublished` | datum van de laatste wijziging in de bron (`modification` in het API) |

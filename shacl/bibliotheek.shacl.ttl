@@ -7,8 +7,7 @@
 # ---------------------------------------------------------------------------
 # SHACL-shapes voor de bibliotheek van de RCE (boeken en tijdschriftartikelen).
 #
-# Gebaseerd op de conventies van het Collectie Nederland-profiel
-# (https://github.com/cultureelerfgoed/collectie-nederland-schema-profile):
+# Gebaseerd op het NDE-applicatieprofiel (https://docs.nde.nl/schema-profile/), met deze conventies:
 #   - sh:message: "<Klasse>: <eigenschap> ontbreekt." / "... moet een URI zijn." enz.
 #   - Violation  = de data is fout of onbruikbaar; de pijplijn publiceert dan niet.
 #   - Warning    = de data hoort anders te zijn, maar publicatie kan door.

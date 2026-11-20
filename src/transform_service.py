@@ -93,7 +93,7 @@ def _start_record(graph: Graph, config: dict, kind: str, priref: str, types: lis
     graph.add((node, SDO.isPartOf, URIRef(config['DATASET_URI'])))
     graph.add((node, SDO.sdPublisher, URIRef(config['ORG_URI'])))
     if modified:
-        # datum waarop het record in de bron voor het laatst is gewijzigd (verplicht in het CN-profiel)
+        # datum waarop het record in de bron voor het laatst is gewijzigd (verplicht in het NDE-applicatieprofiel)
         graph.add((node, SDO.sdDatePublished, Literal(modified[:10], datatype=XSD.date)))
     if config.get('LICENSE_URI'):
         graph.add((node, SDO.license, URIRef(config['LICENSE_URI'])))
@@ -127,7 +127,7 @@ def _agent(graph: Graph, config: dict, name: str, force_org: bool = False) -> UR
 
 
 def _add_authors(graph: Graph, config: dict, work: URIRef, persons: list, corporate: list):
-    """schema:author is een subeigenschap van schema:creator; het CN-profiel toetst op creator, dus beide."""
+    """schema:author is een subeigenschap van schema:creator; beide staan erop, zodat de shapes op creator kunnen toetsen."""
     seen = set()
     for name, force_org in [(n, False) for n in persons] + [(n, True) for n in corporate]:
         agent = _agent(graph, config, name, force_org)
@@ -193,7 +193,7 @@ def _api_title(record) -> str:
 # ---------------------------------------------------------------------------
 
 def transform_book(graph: Graph, config: dict, record, source: dict) -> URIRef:
-    """Adlib-boekrecord -> schema:Book (en schema:CreativeWork, voor het CN-profiel).
+    """Adlib-boekrecord -> schema:Book (en schema:CreativeWork, voor het NDE-applicatieprofiel).
 
     Title/lead_word + title            -> schema:name (@nl)
     Author/author.name                 -> schema:author + schema:creator (Person of Organization, gedeeld per naam)

@@ -44,8 +44,8 @@ Elke bron heeft een naam (`books`, `article`) die ook in de bestandsnamen, het m
 | `api_database` | niet ingesteld (dus `SRC_API_DATABASE`) | `archrep` | API-alias voor deze bron. De alias bepaalt welke velden terugkomen, en bij een oogst zijn dat er minder dan bij één record. `archrep` geeft alle velden (`*`); `article` geeft in een oogst geen `lead_word`, CHT-koppelingen of `source.title.lref`. |
 | `api_fields` | niet ingesteld (alle standaardvelden van de alias) | lijst van 26 velden | de velden die uit het API worden opgevraagd (`fields=`). Alleen wat in de mapping wordt gebruikt; interne velden verlaten de server zo niet. Een veld dat hier ontbreekt, ontbreekt in de data. |
 | `api_search` | `priref<200000000 or priref>=300000000` | `priref>=200000000 and priref<300000000` | zoekopdracht in het Adlib-API; alle treffers worden opgehaald |
-| `scope` | `oai` | `oai` | `oai`: alleen records die de OAI-set bevat. `api`: alles wat `api_search` oplevert (alleen voor boeken; artikelen hebben de OAI altijd nodig). |
-| `exclude_priref` | `[[200000000, 299999999]]` | niet ingesteld | priref-bereiken `[van, tot]` in de OAI-selectie die bij een andere bron horen. De OAI-set `books` bevat ook alle tijdschriftartikelen; die worden hier overgeslagen (met reden in `skipped_reasons`) en lopen via de bron `article`. |
+| `scope` | `api` | `api` | `api`: alles wat `api_search` oplevert (voor boeken en artikelen; de OAI wordt dan niet geraadpleegd). `oai`: alleen records die de OAI-set bevat. |
+| `exclude_priref` | `[[200000000, 299999999]]` | niet ingesteld | alleen bij `scope: oai`: priref-bereiken `[van, tot]` in de OAI-selectie die bij een andere bron horen. De OAI-set `books` bevat ook alle tijdschriftartikelen; die worden hier overgeslagen (met reden in `skipped_reasons`) en lopen via de bron `article`. |
 | `oai` | set `books`, prefix `oai_dc_book` | set `article`, prefix `oai_dc` | set en `metadataPrefix` van de OAI |
 | `catalog_url` | `https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}` | idem | sjabloon voor `schema:url` |
 
