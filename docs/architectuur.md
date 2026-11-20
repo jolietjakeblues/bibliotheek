@@ -39,14 +39,16 @@ De catalogus is op twee manieren te benaderen, en geen van beide is volledig.
 
 Daarom:
 
-- de **OAI levert de selectie** (`scope: oai`): alleen records die de OAI-set bevat, worden gepubliceerd;
-- het **API levert de inhoud** van boeken en artikelen;
+- het **API levert de inhoud en de selectie** (`scope: api`, de standaard): alles wat `api_search` oplevert, wordt gepubliceerd. Het doel
+  is een zo compleet mogelijke catalogus, zodat het oude model kan vervallen;
 - bij **artikelen** komt ook het tijdschrift (naam, jaargang, aflevering, jaar, pagina's, en het priref van het tijdschriftrecord) uit het
-  API. De OAI-identifier (`1970:200000025`) is hetzelfde nummer als `priref="200000025"` in het API.
+  API. De OAI-identifier (`1970:200000025`) is hetzelfde nummer als `priref="200000025"` in het API;
+- de **OAI** is dan alleen nog nodig bij `scope: oai`: alleen records die de OAI-set bevat, worden gepubliceerd.
 
 De OAI-sets zijn geen publicatievlag maar een zoekopdracht op een pointerfile (de beheerder, 17 november): `books` bevat records met een
-exemplaarnummer, `article` artikelen met `bron.Repository` gevuld. Het API kent alle records. Of ook de ongeveer 61.500 records in het boekenbereik zonder
-exemplaar gepubliceerd moeten worden, is een open besluit ([besluiten.md](besluiten.md)).
+exemplaarnummer, `article` artikelen met `bron.Repository` gevuld. Het API kent alle records. Daarmee vallen onder `scope: oai` ongeveer
+61.500 records in het boekenbereik en 94.190 artikelen af (gemeten 20 november), terwijl het oude model ze wel had. Dat is de reden voor
+`scope: api`; zie [besluiten.md](besluiten.md), besluit 1 en 10.
 
 **Let op: aliassen en velden.** Welke velden een API-record heeft, hangt af van de alias (`database=`) én van het aantal treffers. Bij één
 treffer geeft het API de `detailfields` van de alias, bij meer de `brieffields`. Een record dat je los opvraagt, heeft dus meer
@@ -69,21 +71,22 @@ run falen.
 
 ### Boeken (`kind: book`)
 
-1. **Selectie:** alle identifiers van de OAI-set `books` ophalen (`ListIdentifiers`, 18.000+ pagina's), in tijdvakken die tegelijk worden
-   opgehaald (zie "Eigenaardigheden"). Dat zijn de te publiceren priref's.
-2. **Inhoud:** alle API-records uit `api_search` ophalen (`priref<200000000 or priref>=300000000`, ongeveer 217.000), met drie pagina's
+1. **Inhoud:** alle API-records uit `api_search` ophalen (`priref<200000000 or priref>=300000000`, ongeveer 217.000), met drie pagina's
    tegelijk.
-3. Per API-record dat in de selectie zit: transformeren naar schema.org. De rest telt als `out_of_scope`.
-4. Priref's in de selectie die het API niet leverde: `missing_in_api` (standaard een fout). Priref's die het API zelf niet kón leveren
-   omdat het record in de bron fout staat, tellen apart als `unreadable` (zie "Eigenaardigheden").
+2. Elk record transformeren naar schema.org. Priref's die het API zelf niet kón leveren omdat het record in de bron fout staat, tellen
+   apart als `unreadable` (zie "Eigenaardigheden").
+
+Bij `scope: oai` komt daar een selectie voor: eerst alle identifiers van de OAI-set `books` ophalen (`ListIdentifiers`, 18.000+
+pagina's, in tijdvakken die tegelijk worden opgehaald), daarna alleen die API-records transformeren (de rest telt als `out_of_scope`) en
+`missing_in_api` tellen voor priref's die het API niet leverde.
 
 ### Artikelen (`kind: article`)
 
-1. **Selectie:** alle identifiers van de OAI-set `article` ophalen (`ListIdentifiers`, in tijdvakken). Dat zijn de te publiceren priref's.
-2. **Inhoud:** alle API-records uit `api_search` ophalen (`priref>=200000000 and priref<300000000`, ongeveer 120.000), met de alias
+1. **Inhoud:** alle API-records uit `api_search` ophalen (`priref>=200000000 and priref<300000000`, ongeveer 120.000), met de alias
    `archrep` en de velden uit `api_fields`: titel, onderwerpen, CHT-koppelingen en de groep `Source` met het tijdschrift.
-3. Per API-record dat in de selectie zit: transformeren naar schema.org. De rest telt als `out_of_scope`.
-4. Priref's in de selectie die het API niet leverde: `missing_in_api` (standaard een fout); onleesbare records tellen als `unreadable`.
+2. Elk record transformeren naar schema.org; onleesbare records tellen als `unreadable`.
+
+Bij `scope: oai` geldt dezelfde selectie als bij boeken, met de OAI-set `article`.
 
 Boeken en artikelen volgen dus dezelfde route; ze verschillen in alias en mapping.
 

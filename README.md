@@ -27,13 +27,14 @@ De catalogus is op twee manieren te benaderen en geen van beide is volledig:
 | Levert | de selectie (boeken met een exemplaar, artikelen met `bron.Repository`); bij artikelen het tijdschrift, de jaargang en de pagina's | volledige records: reeks, uitgever en plaats apart, CHT-URI's, artikeltitels |
 | Mist | artikeltitels; plaats en uitgever apart | niets wat we publiceren, mits de juiste alias en velden worden gekozen (zie [docs/architectuur.md](docs/architectuur.md)) |
 
-Daarom bepaalt de OAI **welke** records worden gepubliceerd (een zoekopdracht op een pointerfile, geen publicatievlag), en levert het API de **inhoud**; bij artikelen worden beide samengevoegd op
-het priref. Zie [docs/architectuur.md](docs/architectuur.md).
+De OAI-sets zijn een zoekopdracht op een pointerfile, geen publicatievlag, en laten ongeveer 156.000 records van de catalogus weg. Daarom levert het API
+zowel de **inhoud** als de **selectie** (`scope: api`, alles wat de zoekopdracht oplevert); `scope: oai` beperkt tot de OAI-sets. Zie
+[docs/architectuur.md](docs/architectuur.md) en [docs/besluiten.md](docs/besluiten.md).
 
-| Bron | Omvang volgens de OAI | Wordt | Graph in Triply |
+| Bron | Omvang (20 november, volgens het API) | Wordt | Graph in Triply |
 |---|---|---|---|
-| boeken (`books`) | 182.398 | `schema:Book` | `…/rce/bibliotheek/graphs/books` |
-| artikelen (`article`) | 26.265 | `schema:Article`, met `Periodical`, `PublicationVolume`, `PublicationIssue` | `…/rce/bibliotheek/graphs/article` |
+| boeken (`books`) | ongeveer 216.900 (OAI-set: 182.398) | `schema:Book` | `…/rce/bibliotheek/graphs/books` |
+| artikelen (`article`) | 120.455 (OAI-set: 26.265) | `schema:Article`, met `Periodical`, `PublicationVolume`, `PublicationIssue` | `…/rce/bibliotheek/graphs/article` |
 
 ## Wat er in de data zit
 
@@ -88,8 +89,8 @@ Een run **faalt, en publiceert dan niets**, als:
 - records die de OAI publiceert in het API ontbreken, of records niet getransformeerd kunnen worden (standaard: geen enkel);
 - een SHACL-**Violation** voorkomt. Warnings, zoals een boek zonder auteur, staan in de log maar blokkeren niet.
 
-De shapes (`shacl/bibliotheek.shacl.ttl`) volgen de conventies van het
-[CN-profiel](https://github.com/cultureelerfgoed/collectie-nederland-schema-profile). Details in
+De shapes (`shacl/bibliotheek.shacl.ttl`) zijn gebaseerd op het
+[NDE-applicatieprofiel](https://docs.nde.nl/schema-profile/). Details in
 [docs/architectuur.md](docs/architectuur.md).
 
 ## GitHub Action

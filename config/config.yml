@@ -33,16 +33,16 @@ SRC_BACKOFF: 2.0
 # Bronnen. kind bepaalt welke transformatie wordt gebruikt (book | article).
 #   api_search  zoekopdracht in het Adlib-API (alle records die erin vallen worden opgehaald)
 #   api_database, api_fields  API-alias en de velden die worden opgevraagd (zie bij article)
-#   scope       oai: alleen records die de OAI-set publiceert (de OAI bepaalt wat openbaar is)
-#               api: alles wat api_search oplevert
-#   exclude_priref  [[van, tot], ...] priref's in de OAI-selectie die bij een andere bron horen (worden overgeslagen)
-#   oai         set en metadataPrefix; bij artikelen ook de bron van tijdschrift, jaar en pagina's
+#   scope       api: alles wat api_search oplevert (doel: een zo compleet mogelijke catalogus; besluit 1 en 10 in docs/besluiten.md)
+#               oai: alleen records die de OAI-set publiceert (de OAI-sets zijn een zoekopdracht, geen publicatievlag)
+#   exclude_priref  [[van, tot], ...] alleen bij scope oai: priref's in de OAI-selectie die bij een andere bron horen
+#   oai         set en metadataPrefix; alleen nodig bij scope oai
 SOURCES:
   books:
     kind: 'book'
     api_search: 'priref<200000000 or priref>=300000000'
-    scope: 'oai'
-    # De OAI-set books bevat ook alle tijdschriftartikelen (priref 2e8 tot 3e8, 26.975 stuks); die gaan via de bron article.
+    scope: 'api'
+    # Alleen bij scope oai: de OAI-set books bevat ook tijdschriftartikelen (priref 2e8 tot 3e8); die gaan via de bron article.
     exclude_priref: [[200000000, 299999999]]
     oai: {set: 'books', prefix: 'oai_dc_book'}
     # link naar het record in de catalogus
@@ -59,7 +59,7 @@ SOURCES:
                  RNA_URI, person.keyword.name, search_year, monument.number, monument.name, monument.country, monument.province,
                  monument.county, monument.place, source.title, source.title.lead_word, source.title.lref, source.volume,
                  source.issue, source.publication_years, source.pagination, source.material_type]
-    scope: 'oai'
+    scope: 'api'
     oai: {set: 'article', prefix: 'oai_dc'}
     catalog_url: 'https://catalogus.cultureelerfgoed.nl/Details/fullCatalogue/{priref}'
 

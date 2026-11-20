@@ -2,6 +2,15 @@
 
 Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er is nog geen gepubliceerde release.
 
+## 2026-11-20
+
+### Gewijzigd
+- **`scope: api` voor boeken en artikelen** (was `oai`): alles wat het Adlib-API oplevert wordt gepubliceerd, niet alleen de OAI-sets. Reden:
+  de OAI-sets laten ongeveer 156.000 records weg (94.190 artikelen zonder `source.Repository`, ongeveer 61.500 boekrecords zonder exemplaar)
+  en het doel is een zo compleet mogelijke dataset, zodat het oude model kan vervallen. Nog niet gedraaid; zie `docs/besluiten.md`.
+- De volledigheidscontrole eist bij `scope: api` ook voor artikelen geen OAI-teller meer.
+- Verwijzingen naar het "CN-profiel" vervangen door het NDE-applicatieprofiel.
+
 ## 2026-11-13
 
 ### Toegevoegd
@@ -12,7 +21,7 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
 - **Artikelen**: titel en onderwerpen uit het API, samengevoegd met tijdschrift, jaargang, aflevering, jaar en pagina's uit de OAI.
 - Kwaliteitspoorten: volledigheid tegen `completeListSize` en `diagnostic/hits`, detectie van dubbele API-records, boekhouding van elk
   record, grenzen voor transformatiefouten en voor records die in de OAI maar niet in het API staan.
-- SHACL-shapes in de stijl van het CN-profiel, met negatieve tests.
+- SHACL-shapes op basis van het NDE-applicatieprofiel, met negatieve tests.
 - Licentie van de code: GPL-3.0 (`LICENSE`), dezelfde als de kunst-ETL.
 - Documentatie in `docs/` en `README.md`; echte voorbeelden in `docs/voorbeelden/` (gegenereerd en door een test bewaakt);
   voorbeeld-SPARQL-query's die op de testrecords worden uitgevoerd.

@@ -45,7 +45,7 @@ De tests gebruiken geen netwerk: de bronnen worden nagebootst, en de inhoud komt
 
 - **Taal:** documentatie, commentaar, logmeldingen en SHACL-berichten zijn in het Nederlands; namen in de code zijn Engels of
   Nederlands, zoals de bestaande code.
-- **SHACL-berichten** volgen het CN-profiel: `<Klasse>: <eigenschap> ontbreekt.`, `... moet een URI zijn.`, `... moet tekst met taalcode zijn`.
+- **SHACL-berichten** volgen de berichtstijl van `shacl/bibliotheek.shacl.ttl`: `<Klasse>: <eigenschap> ontbreekt.`, `... moet een URI zijn.`, `... moet tekst met taalcode zijn`.
 - **Violation of Warning:** een Violation betekent dat de data fout of onbruikbaar is en de publicatie stopt; een Warning is een bekend
   hiaat in de bron. Maak geen Violation van iets wat in de catalogus gewoon voorkomt.
 - **Faal liever dan stilzwijgend onvolledig:** een nieuwe teller hoort tegen de bron gecontroleerd te worden.

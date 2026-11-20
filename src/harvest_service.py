@@ -5,8 +5,10 @@ Gebruik:
     python src/harvest_service.py --source all --max-records 50      # snelle test
 
 Bronnen (zie config/config.yml):
-  books    volledige records uit het Adlib-API (alias `books`). De OAI-set `books` bepaalt welke records worden gepubliceerd.
-  article  volledige records uit het Adlib-API (alias `article`, met tijdschriftgegevens). De OAI-set `article` bepaalt de selectie.
+  books    volledige records uit het Adlib-API (alias `books`).
+  article  volledige records uit het Adlib-API (alias `archrep`, met tijdschriftgegevens).
+Bij `scope: api` (de standaard in config.yml) wordt alles gepubliceerd wat `api_search` oplevert; bij `scope: oai` bepaalt de
+OAI-set welke records worden gepubliceerd.
 
 Per bron ontstaan `{CACHE_PATH}{bron}-0000.jsonld`, `-0001.jsonld`, ... en `{CACHE_PATH}manifest-{bron}.json`.
 Controles (de run faalt, zodat er niets gepubliceerd wordt):
@@ -231,7 +233,7 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
         logger.info('Beperkte run (--max-records): volledigheidscontrole overgeslagen.')
         return True
     ok = True
-    uses_oai = source.get('scope', 'oai') == 'oai' or source['kind'] == 'article'
+    uses_oai = source.get('scope', 'oai') == 'oai'      # bij scope 'api' wordt de OAI niet geraadpleegd, ook niet voor artikelen
     if uses_oai:
         if state['oai_expected'] is None:
             logger.error('De OAI gaf geen completeListSize; volledigheid kan niet worden gecontroleerd.')
