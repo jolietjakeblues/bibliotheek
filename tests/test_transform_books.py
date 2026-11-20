@@ -246,3 +246,47 @@ def test_zero_pages_is_not_a_page_count(config):
     work = ts.transform_book(graph, config, record, config['SOURCES']['books'])
     assert graph.value(work, SDO.numberOfPages) is None
     assert str(graph.value(work, SDO.size)) == '0 p. ; ill. ; 30 cm.'
+
+
+# --- ABR en RN in versie 2 -------------------------------------------------
+
+ABR = 'https://data.cultureelerfgoed.nl/term/id/abr/'
+RN = 'https://data.cultureelerfgoed.nl/term/id/rn/'
+
+
+def test_abr_en_rn_zonder_versie_worden_versie_2(config):
+    """Adlib levert ABR en RN zonder versie; dezelfde uuid in ABR 2 / RN 2 is het geldende begrip (gemeten 20 november 2026)."""
+    booronderzoek = 'e06a84fa-62e8-42ff-8f38-0ddfe9485a15'
+    assert ts.thesaurus_uri(config, ABR + booronderzoek) == ABR + '2/' + booronderzoek
+    assert ts.thesaurus_uri(config, RN + 'f8205fae-5d6d-4e07-90ab-9e223ab93457') == RN + '2/f8205fae-5d6d-4e07-90ab-9e223ab93457'
+
+
+def test_begrip_zonder_versie_2_houdt_de_uri_uit_de_bron(config):
+    zonder_v2 = ABR + '54c2435c-fc56-4c3d-a0c7-3cf319f09f94'     # bestaat in geen enkele thesaurus: nooit naar een niet-bestaand begrip
+    assert ts.thesaurus_uri(config, zonder_v2) == zonder_v2
+    for uri in (CHT + 'aa9cda1e-c01d-431e-9f74-51d3073b97d5',     # CHT heeft geen versie in de URI
+                ABR + '2/e06a84fa-62e8-42ff-8f38-0ddfe9485a15',   # al versie 2
+                'https://data.cultureelerfgoed.nl/term/id/bw/8ac2cbfb-eeb6-4bb2-9509-845f1712bc25'):
+        assert ts.thesaurus_uri(config, uri) == uri
+
+
+def test_rn_begrip_onder_het_abr_wordt_rn_2(config):
+    """Adlib zet sommige RN-begrippen onder het ABR: …/abr/64e9fcac-… staat niet in ABR 2, wel in RN 2 ("begraving")."""
+    begraving = '64e9fcac-d66a-4b27-bd63-694c9735059d'
+    assert ts.thesaurus_uri(config, ABR + begraving) == RN + '2/' + begraving
+
+
+def test_zonder_lijst_blijven_de_uris_ongewijzigd(config):
+    uri = ABR + 'e06a84fa-62e8-42ff-8f38-0ddfe9485a15'
+    assert ts.thesaurus_uri({**config, 'THESAURUS_V2_PATH': ''}, uri) == uri
+    assert ts.thesaurus_uri({**config, 'THESAURUS_V2_PATH': 'config/bestaat-niet.json.gz'}, uri) == uri
+
+
+def test_abr_in_een_boek_wordt_versie_2(config):
+    record = ET.fromstring('<record priref="999902" modification="2026-01-01T00:00:00"><priref>999902</priref>'
+                           '<Title><title>Booronderzoek</title></Title><Content_subject>'
+                           f'<RNA_URI>{ABR}e06a84fa-62e8-42ff-8f38-0ddfe9485a15</RNA_URI></Content_subject></record>')
+    graph = Graph()
+    work = ts.transform_book(graph, config, record, config['SOURCES']['books'])
+    assert URIRef(ABR + '2/e06a84fa-62e8-42ff-8f38-0ddfe9485a15') in set(graph.objects(work, SDO.about))
+    assert URIRef(ABR + 'e06a84fa-62e8-42ff-8f38-0ddfe9485a15') not in set(graph.objects(work, SDO.about))

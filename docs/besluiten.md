@@ -59,7 +59,7 @@ Doel: één geldend model met de hele catalogus. Dat kan pas als het volgende kl
   catalogusrecord. Het tijdschriftrecord zelf (uitgever, plaats, ISSN) staat er nog niet bij; het is op te halen met `priref=400009141`.
 - **Reeksen koppelen aan de aparte database `series`** (11.282 reeksen met priref). Nu zijn het teksten met naam en deelnummer.
 - **Authority-nummers voor auteurs** (NTA, VIAF), zodat gelijke namen niet langer worden samengevoegd.
-- **Trefwoorden als thesaurus-URI's.** Alleen `Content_subject` verwijst nu naar de CHT; `Keyword` is tekst.
+- **Trefwoorden als thesaurus-URI's.** Alleen `Content_subject` verwijst nu naar de CHT, het ABR en het RN; `Keyword` is tekst.
 - **Plaats bij een uitgever.** De oude data had `schema:location` bij uitgevers; hier staat de plaats bij het boek.
 
 ## Genomen besluiten
@@ -76,6 +76,7 @@ Doel: één geldend model met de hele catalogus. Dat kan pas als het volgende kl
 | **`schema:author` én `schema:creator`** | `author` is specifieker; de shapes toetsen op `creator`. Een extra triple per auteur. |
 | **Type `Book`/`Article` plus `CreativeWork`** | het NDE-applicatieprofiel gaat uit van `CreativeWork`. |
 | **CHT-term rechtstreeks als IRI bij `schema:about`** | het API levert alleen de IRI; het label staat in de CHT-graph van dezelfde dataset. |
+| **ABR en RN in versie 2** (20 november 2026) | Adlib levert ABR- en RN-begrippen zonder versie (`…/term/id/abr/<uuid>`), terwijl ABR 2 en RN 2 gelden. Een afnemer vond daardoor 101 ABR-begrippen (50.649 koppelingen, vooral onderzoekstypen zoals "archeologisch: booronderzoek") zonder label: in de dataset staat de ABR 2-graph. Versie 2 gebruikt dezelfde uuid. De URI wordt omgezet als de uuid in ABR 2 of RN 2 bestaat (lijst: `config/thesaurus_v2.json.gz`, gemaakt met `tools/maak_thesaurus_v2.py`): 99 van de 101 ABR-begrippen naar ABR 2, 1 naar RN 2 (Adlib zet `…/abr/64e9fcac-…`, in RN 2 "begraving", onder het ABR; eerst wordt de eigen thesaurus geprobeerd, dan de andere) en 21 van de 21 RN-begrippen naar RN 2. Zonder versie 2 blijft de URI uit de bron; er wordt nooit naar een niet-bestaand begrip verwezen. Beter is dat Adlib zelf de URI's van versie 2 levert; dat is te melden bij de beheerder van de thesauruskoppeling. |
 | **Reeksnummer in `schema:position`** | past bij `CreativeWorkSeries`; het nummer kan tekst zijn (`97/3`, `III.3`). |
 | **Monument-node zonder naam** | hetzelfde monumentnummer komt met verschillende namen voor; een gedeelde node mag maar één naam per taal hebben. De validatie vond dit op 3.000 echte boeken. |
 | **`comments`, `Digital_reference`, `shelf_mark` niet publiceren** | interne notities, externe links via een proxy, een magazijnnummer |

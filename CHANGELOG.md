@@ -5,6 +5,10 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
 ## 2026-11-20
 
 ### Gewijzigd
+- **ABR en RN in versie 2.** Adlib levert ABR- en RN-URI's zonder versie (`…/term/id/abr/<uuid>`); die worden nu `…/abr/2/<uuid>` en
+  `…/rn/2/<uuid>` als dezelfde uuid in versie 2 bestaat (100 van de 101 ABR- en 21 van de 21 RN-begrippen in de huidige data; één "ABR"-begrip blijkt een RN-begrip en gaat naar RN 2). Nieuw:
+  `tools/maak_thesaurus_v2.py`, `config/thesaurus_v2.json.gz` en de sleutel `THESAURUS_V2_PATH`. Aanleiding: een afnemer vond de
+  onderzoekstypen uit het ABR zonder label, omdat de dataset de ABR 2-graph bevat.
 - **`scope: api` voor boeken en artikelen** (was `oai`): alles wat het Adlib-API oplevert wordt gepubliceerd, niet alleen de OAI-sets. Reden:
   de OAI-sets laten ongeveer 156.000 records weg (94.190 artikelen zonder `source.Repository`, ongeveer 61.500 boekrecords zonder exemplaar)
   en het doel is een zo compleet mogelijke dataset, zodat het oude model kan vervallen. Nog niet gedraaid; zie `docs/besluiten.md`.

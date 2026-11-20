@@ -149,6 +149,8 @@ workflow opnieuw te importeren. Is dat niet nodig of kan het niet meer, dan is d
 2. Draai `python -m pytest`. Verandert de mapping, dan falen de tests in `tests/test_docs.py` tot je de voorbeelden vernieuwt:
    `python tools/maak_voorbeelden.py`.
 3. Werk de documentatie bij ([mapping.md](mapping.md), [configuratie.md](configuratie.md)).
+   Komen er begrippen bij in ABR 2 of RN 2, vernieuw dan de lijst waarmee ABR- en RN-URI's naar versie 2 gaan:
+   `python tools/maak_thesaurus_v2.py` (ongeveer een minuut; stopt zonder te schrijven als de download niet klopt).
 4. Commit en push. Doe daarna eerst een testrun (stap 1 hierboven).
 
 Zie ook [CONTRIBUTING.md](../CONTRIBUTING.md).

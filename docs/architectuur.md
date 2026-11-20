@@ -160,6 +160,7 @@ De dataset bevat al een oudere conversie in andere graphs (`…/graph/bib`, `bib
 | `shacl/bibliotheek.shacl.ttl` | de shapes |
 | `config/config.yml` | alle instellingen ([configuratie.md](configuratie.md)) |
 | `tools/maak_voorbeelden.py` | genereert `docs/voorbeelden/*.ttl` uit de echte fixtures |
+| `tools/maak_thesaurus_v2.py` | maakt `config/thesaurus_v2.json.gz`: de begrippen van ABR 2 en RN 2, om ABR- en RN-URI's zonder versie om te zetten |
 | `tests/` | pytest; echte records in `tests/fixtures/` |
 
 ## Eigenaardigheden van de bronnen

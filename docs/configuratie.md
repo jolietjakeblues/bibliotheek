@@ -13,6 +13,7 @@ elke sleutel in het bestand hier voorkomt.
 | `DATASET_NAME` | `Bibliotheek RCE` | naam van de dataset-node |
 | `DATASET_DESCRIPTION` | tekst | beschrijving van de dataset-node |
 | `LICENSE_URI` | leeg | IRI van de licentie van de metadata. Leeg betekent: geen `schema:license`. **Nog te besluiten** ([besluiten.md](besluiten.md)). |
+| `THESAURUS_V2_PATH` | `config/thesaurus_v2.json.gz` | lijst met de begrippen (uuid's) van ABR 2 en RN 2. Een ABR- of RN-URI uit Adlib zonder versie (`…/abr/<uuid>`) wordt `…/abr/2/<uuid>` of `…/rn/2/<uuid>` als de uuid in de lijst staat. Vernieuwen met `python tools/maak_thesaurus_v2.py`. Leeg of ontbrekend bestand: URI's ongewijzigd uit de bron. |
 
 ## Adlib-API (volledige records)
 
