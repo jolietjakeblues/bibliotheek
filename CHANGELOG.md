@@ -14,6 +14,11 @@ Alle noemenswaardige wijzigingen. Nieuwste bovenaan. Nog geen versienummers: er 
   wordt nu ook aan het eind opgehaald (`api_hits_end` in het manifest) en telt mee als de bron gegroeid is. Kromp hij, dan blijft de run falen.
 - GitHub Action: `fail-fast: false` bij de oogst. Een mislukte bron annuleert de andere niet meer; publiceren blijft geblokkeerd zolang een bron mislukt.
 - Verwijzingen naar het "CN-profiel" vervangen door het NDE-applicatieprofiel.
+- **Boeken zonder titel worden niet gepubliceerd** (`MAX_EMPTY_IN_API`, nu 50). De derde run met `scope: api` oogstte alles, maar de SHACL-validatie
+  faalde op 18 boeken zonder `schema:name`. Dat zijn lege records in de bron (alleen een priref, één met een publicatiejaar): de priref's
+  143223, 143224, 550037772, 550037796, 550037799, 550037802, 700002038 t/m 700002047, 900002435 en 900003272. Ze staan nu met priref in het manifest
+  (`empty`, `empty_ids`) en tellen mee in de rekensom. Meer dan `MAX_EMPTY_IN_API` lege boeken laat de run falen, zodat een alias of
+  veldenlijst die de titel niet teruggeeft niet ongemerkt een lege dataset oplevert.
 
 ## 2026-11-13
 

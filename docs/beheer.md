@@ -80,6 +80,7 @@ exemplaar, tijdschriftrecords en rapporten. `skipped` zijn de artikelen in de OA
 | `oai_seen` / `oai_expected` | records uit de OAI die we kregen / die de OAI aankondigde (`completeListSize`). Moeten gelijk zijn. |
 | `oai_windows` | aantal tijdvakken waarin de OAI-lijst is opgehaald (leeg bij een beperkte run) |
 | `api_seen` / `api_hits` / `api_hits_end` | records uit het API die we kregen / die het API aan het begin aankondigde / die het aan het eind van de oogst aankondigde. Samen met `api_unreadable` moet `api_seen` gelijk zijn aan `api_hits`, of aan `api_hits_end` als de catalogus tijdens de oogst groeide (nieuwe records staan achteraan; gemeten op 20 november). Een kleiner aantal aan het eind telt niet: dan is er een record verdwenen en kunnen er door de verschuiving records gemist zijn. |
+| `empty`, `empty_ids` | boeken zonder titel in het API (lege records in de bron). Ze worden niet gepubliceerd; geef de priref's door aan de beheerder. |
 | `api_unreadable`, `unreadable_in_scope`, `unreadable_ids` | records die het API zelf niet kon uitleveren (kapot in de bron), hoeveel daarvan gepubliceerd hadden moeten worden, en welke. |
 | `api_duplicates` | records die het API dubbel leverde. Moet `0` zijn. |
 | `intended` | records die we wilden schrijven (de selectie) |
@@ -105,6 +106,8 @@ Warnings (bijvoorbeeld "Book: schema:author ontbreekt") zijn bekende hiaten in d
 | `ONVOLLEDIG (API): ... (K dubbel geleverd)` | paginering van het API klopt niet | zie `adlib_client.py` (`startfrom` telt vanaf 1); meld het als dit na een wijziging gebeurt |
 | `Record N is dubbel geleverd door het API` | idem | idem |
 | `Record N is onleesbaar in het API en wordt overgeslagen: Invalid integer value ...` | het record staat in de bron fout (bijvoorbeeld tekst in een getalveld) | niets aan de pijplijn; geef het priref door aan de beheerder van de catalogus. Het record wordt niet gepubliceerd. |
+| `N boeken hebben in het API geen titel en worden niet gepubliceerd: ...` | lege records in de bron (alleen een priref) | niets aan de pijplijn; geef de priref's (`empty_ids`) door aan de beheerder |
+| `N boeken zonder titel in het API (toegestaan: 50)` | meer lege boeken dan `MAX_EMPTY_IN_API`, of een alias/veldenlijst die de titel niet teruggeeft | controleer eerst één record los in het API; verhoog de grens alleen bewust |
 | `N te publiceren records waren in het API onleesbaar (toegestaan: 10): ...` | meer kapotte records dan `MAX_UNREADABLE_IN_API` | lees `unreadable_ids`, laat de records herstellen; verhoog de grens alleen bewust |
 | `Tijdvak ...: N records opgehaald, M verwacht` of `De tijdvakken bevatten samen ...` | de OAI veranderde tijdens het plannen of de run (een record kreeg een nieuwe datestamp) | start de run opnieuw; blijft het gebeuren, zet `SRC_OAI_WORKERS` op 1 |
 | `N records staan in de OAI maar niet in het API (toegestaan: 0): ...` | records buiten `api_search`, of echt niet in het API | zie `missing_ids` in het manifest en de uitleg hieronder |

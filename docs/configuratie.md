@@ -60,6 +60,7 @@ Valt een record dat de OAI publiceert buiten die zoekopdracht, dan telt het als 
 | `MAX_RECORD_ERRORS` | `0` | aantal records dat bij de transformatie mag falen voordat de run mislukt |
 | `MAX_MISSING_IN_API` | `0` | aantal records dat de OAI publiceert maar het API niet kent, voordat de run mislukt |
 | `MAX_UNLINKED_JOURNAL_PERCENT` | `2` | percentage artikelen met een tijdschrift zonder `source.title.lref` waarbij de run mislukt. Gemeten: 0%. Bewaakt dat de API-alias het adres van het tijdschrift teruggeeft. |
+| `MAX_EMPTY_IN_API` | `50` | aantal boeken zonder titel in het API (lege records in de bron, alleen een priref). Ze worden niet gepubliceerd, want `schema:name` is voor een Book verplicht, en staan met priref in het manifest (`empty_ids`). Gemeten op 20 november: 18 van 216.887. Een veel hoger aantal wijst op een alias of veldenlijst die de titel niet teruggeeft; de run faalt dan. |
 | `MAX_UNREADABLE_IN_API` | `10` | aantal te publiceren records dat het API zelf niet kan uitleveren omdat het record in de bron fout staat (zie [beheer.md](beheer.md)); zulke records worden overgeslagen en met priref in het manifest genoemd. `0` laat de run bij het eerste kapotte record falen. |
 
 ## Organisatie

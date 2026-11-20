@@ -188,6 +188,12 @@ def _api_title(record) -> str:
     return join_title(adlib.first(record, 'Title/lead_word'), adlib.first(record, 'Title/title'))
 
 
+def has_title(record) -> bool:
+    """Heeft het API-record een titel? Een boek zonder titel is geen bruikbaar boek: op 20 november waren 18 records van
+    de 216.887 leeg (alleen een priref, soms een jaartal) en kregen geen `schema:name`, dat voor een Book verplicht is."""
+    return bool(_api_title(record))
+
+
 # ---------------------------------------------------------------------------
 # boeken (Adlib-API)
 # ---------------------------------------------------------------------------
