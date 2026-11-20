@@ -181,6 +181,14 @@ def iter_records(base: str, database: str, search: str, state: dict, limit: int 
             if max_records is not None and state['seen'] >= max_records:
                 return
 
+    # De catalogus is in gebruik: tijdens een lange oogst komen er records bij (nieuwe priref's staan achteraan; gemeten op
+    # 20 november: 120.455 -> 120.458 artikelen in een uur). Het aantal treffers aan het eind laat zien of dat gebeurd is.
+    try:
+        end = fetch_page(base, database, search, 1, 1, retries, backoff, fields=fields)
+        state['hits_end'] = int(end.findtext('.//diagnostic/hits') or 0)
+    except Exception as e:  # noqa: BLE001 - zonder eindtelling geldt alleen de telling aan het begin
+        logger.warning('Aantal treffers aan het eind van de oogst niet op te halen: %s', e)
+
 
 # ---------------------------------------------------------------------------
 # hulpjes om records te lezen

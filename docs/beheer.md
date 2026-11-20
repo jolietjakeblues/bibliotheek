@@ -79,7 +79,7 @@ exemplaar, tijdschriftrecords en rapporten. `skipped` zijn de artikelen in de OA
 |---|---|
 | `oai_seen` / `oai_expected` | records uit de OAI die we kregen / die de OAI aankondigde (`completeListSize`). Moeten gelijk zijn. |
 | `oai_windows` | aantal tijdvakken waarin de OAI-lijst is opgehaald (leeg bij een beperkte run) |
-| `api_seen` / `api_hits` | records uit het API die we kregen / die het API aankondigde. Samen met `api_unreadable` moeten ze gelijk zijn aan `api_hits`. |
+| `api_seen` / `api_hits` / `api_hits_end` | records uit het API die we kregen / die het API aan het begin aankondigde / die het aan het eind van de oogst aankondigde. Samen met `api_unreadable` moet `api_seen` gelijk zijn aan `api_hits`, of aan `api_hits_end` als de catalogus tijdens de oogst groeide (nieuwe records staan achteraan; gemeten op 20 november). Een kleiner aantal aan het eind telt niet: dan is er een record verdwenen en kunnen er door de verschuiving records gemist zijn. |
 | `api_unreadable`, `unreadable_in_scope`, `unreadable_ids` | records die het API zelf niet kon uitleveren (kapot in de bron), hoeveel daarvan gepubliceerd hadden moeten worden, en welke. |
 | `api_duplicates` | records die het API dubbel leverde. Moet `0` zijn. |
 | `intended` | records die we wilden schrijven (de selectie) |

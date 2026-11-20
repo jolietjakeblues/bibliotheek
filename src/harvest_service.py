@@ -83,7 +83,7 @@ class ChunkWriter:
 
 
 def new_state() -> dict:
-    return {'oai_seen': 0, 'oai_expected': None, 'oai_windows': None, 'with_journal': 0, 'journal_without_link': 0, 'api_seen': 0, 'api_hits': None, 'skipped': 0, 'skipped_reasons': {},
+    return {'oai_seen': 0, 'oai_expected': None, 'oai_windows': None, 'with_journal': 0, 'journal_without_link': 0, 'api_seen': 0, 'api_hits': None, 'api_hits_end': None, 'skipped': 0, 'skipped_reasons': {},
             'errors': 0, 'error_ids': [], 'api_duplicates': 0, 'written': 0, 'files': 0, 'out_of_scope': 0, 'missing_in_api': 0,
             'missing_ids': [], 'intended': 0, 'limited': False, 'api_unreadable': 0, 'unreadable_ids': [],
             'unreadable_in_scope': 0}
@@ -133,6 +133,7 @@ def _api_iter(config: dict, source: dict, api_state: dict, cap):
 def _count_api(state: dict, api_state: dict, scope):
     """Neem de tellers van het API over. `scope` is de set priref's die we publiceren (None: alles wat het API levert)."""
     state['api_seen'], state['api_hits'] = api_state['seen'], api_state.get('hits')
+    state['api_hits_end'] = api_state.get('hits_end')
     state['api_duplicates'] = api_state.get('duplicates', 0)
     unreadable = api_state.get('unreadable', [])
     state['api_unreadable'] = len(unreadable)
@@ -243,10 +244,20 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
                          state['oai_seen'])
             ok = False
     # records die het API zelf niet kon uitleveren horen bij wat de bron aankondigt: ze zijn bekend en benoemd, niet zoek
-    if state['api_hits'] is None or state['api_seen'] + state['api_unreadable'] != state['api_hits']:
-        logger.error('ONVOLLEDIG (API): bron kondigt %s records aan, %d opgehaald, %d onleesbaar (%d dubbel geleverd).',
-                     state['api_hits'], state['api_seen'], state['api_unreadable'], state['api_duplicates'])
+    # De catalogus groeit tijdens de oogst: het aantal aan het eind mag ook kloppen (er kwamen records bij, achteraan). Records die
+    # verdwijnen schuiven de paginering op en laten records missen; dan klopt geen van beide aantallen en faalt de run.
+    # Het eindaantal telt alleen als de bron gegroeid is: bij een kleiner aantal is er iets verdwenen, en dan kan het aantal
+    # opgehaalde records toevallig kloppen terwijl er door de verschuiving een ander record is gemist.
+    announced = {state['api_hits']}
+    if state['api_hits'] is not None and (state.get('api_hits_end') or 0) > state['api_hits']:
+        announced.add(state['api_hits_end'])
+    if state['api_hits'] is None or state['api_seen'] + state['api_unreadable'] not in announced:
+        logger.error('ONVOLLEDIG (API): bron kondigt %s records aan (aan het eind: %s), %d opgehaald, %d onleesbaar (%d dubbel geleverd).',
+                     state['api_hits'], state.get('api_hits_end'), state['api_seen'], state['api_unreadable'], state['api_duplicates'])
         ok = False
+    elif state.get('api_hits_end') not in (None, state['api_hits']):
+        logger.warning('De bron groeide tijdens de oogst: %s records aan het begin, %s aan het eind; %d opgehaald.',
+                       state['api_hits'], state['api_hits_end'], state['api_seen'] + state['api_unreadable'])
     # wat de OAI publiceert maar het API niet kent of niet kon uitleveren, wordt niet geschreven
     not_written = state['missing_in_api'] + state['unreadable_in_scope']
     if state['written'] + state['errors'] + not_written != state['intended']:
@@ -280,7 +291,7 @@ def verify_completeness(state: dict, source: dict, max_record_errors: int, max_m
 
 
 def write_manifest(cache_path: str, source_name: str, state: dict, complete: bool):
-    keys = ('oai_seen', 'oai_expected', 'oai_windows', 'api_seen', 'api_hits', 'api_duplicates', 'intended', 'written', 'files', 'errors', 'skipped',
+    keys = ('oai_seen', 'oai_expected', 'oai_windows', 'api_seen', 'api_hits', 'api_hits_end', 'api_duplicates', 'intended', 'written', 'files', 'errors', 'skipped',
             'skipped_reasons', 'out_of_scope', 'missing_in_api', 'api_unreadable', 'unreadable_in_scope', 'with_journal', 'journal_without_link')
     manifest = {k: state.get(k) for k in keys}
     manifest['source'] = source_name
