@@ -184,6 +184,9 @@ Gevonden tijdens de bouw, en bewust in de code opgevangen:
   Een foutmelding die een record noemt is dus niet tijdelijk. De client deelt zo'n pagina in tweeën tot het ene record
   overblijft, slaat dat over en noemt het in het manifest (`unreadable_ids`); de rest van de pagina komt gewoon binnen. Een fout
   zonder record wordt niet omzeild. Het record moet in de catalogus worden hersteld; tot dan telt het mee tegen `MAX_UNREADABLE_IN_API`.
+  De server noemt het record in twee vormen: `record number 450004680` en `in record '143525'`. Priref 143525 gaf op 20 november
+  `Tag 'b%' not found in database 'document'`, ook bij een directe opvraag; de client herkende die vorm eerst niet en de volledige
+  boekenrun viel er na 15 minuten op om.
 - **De OAI-lijst is in tijdvakken parallel op te halen.** Een lijst is anders alleen achter elkaar te lezen (elke pagina wijst naar
   de volgende), en dat duurde voor 182.000 boeken ruim drie uur (de eerste volledige run). Een pagina kost 0,2 tot 0,65 s (schommelt,
   niet met de diepte); het openen van een lijst ongeveer 1 s. De server handelt parallelle aanvragen af, dus drie tegelijk is

@@ -107,7 +107,10 @@ def test_broken_xml_is_retried_then_raised(monkeypatch):
 BAD = "Invalid integer value '76, 85' for Field 't3' in database 'document', record number {}"
 
 
-def broken_api(monkeypatch, total, bad, calls=None):
+BAD_TAG = "Tag 'b%' not found in database 'document' in record '{}'"       # priref 143525, 20 november
+
+
+def broken_api(monkeypatch, total, bad, calls=None, message=BAD):
     """Een API waarvan elke pagina die een record uit `bad` bevat faalt, zoals het echte API bij priref 450004680."""
     def fake(base, database, search, start, limit_, retries=5, backoff=2.0):
         if calls is not None:
@@ -116,7 +119,7 @@ def broken_api(monkeypatch, total, bad, calls=None):
         ids = list(range(offset + 1, min(offset + limit_, total) + 1))
         hit = [i for i in ids if i in bad]
         if hit:
-            raise adlib_client.AdlibError(BAD.format(hit[0]))
+            raise adlib_client.AdlibError(message.format(hit[0]))
         return page(offset, len(ids), total)
 
     monkeypatch.setattr(adlib_client, 'fetch_page', fake)
@@ -128,6 +131,15 @@ def test_unreadable_record_is_isolated_and_the_rest_of_the_page_is_kept(monkeypa
     out = [r.get('priref') for r in adlib_client.iter_records('http://x', 'books', 'all', state, limit=10, workers=2)]
     assert out == [str(i) for i in range(1, 96) if i != 37]
     assert state['unreadable'] == ['37'] and state['seen'] == 94 and state['hits'] == 95
+
+
+@pytest.mark.parametrize('message', [BAD, BAD_TAG])
+def test_both_error_formats_name_the_unreadable_record(monkeypatch, message):
+    # priref 143525 gaf "in record '143525'" in plaats van "record number ...": de run viel daarop om (20 november)
+    broken_api(monkeypatch, total=95, bad={37}, message=message)
+    state = {}
+    out = [r.get('priref') for r in adlib_client.iter_records('http://x', 'books', 'all', state, limit=10, workers=2)]
+    assert out == [str(i) for i in range(1, 96) if i != 37] and state['unreadable'] == ['37']
 
 
 def test_isolation_needs_few_requests(monkeypatch):

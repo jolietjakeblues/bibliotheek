@@ -76,15 +76,16 @@ def fetch_page(base: str, database: str, search: str, start: int, limit: int,
     raise last
 
 
-RECORD_ERROR = re.compile(r'record number (\d+)', re.IGNORECASE)
+# De server noemt het kapotte record in twee vormen: "... record number 450004680" en "... in record '143525'".
+RECORD_ERROR = re.compile(r"record(?: number)? '?(\d+)'?", re.IGNORECASE)
 
 
 def fetch_readable(base: str, database: str, search: str, start: int, limit: int, retries: int = 5,
                    backoff: float = 2.0, hits: Optional[int] = None, fields: Optional[str] = None) -> Tuple[ET.Element, list]:
     """Zoals `fetch_page`, maar een record dat de server zelf niet kan uitleveren stopt de pagina niet.
 
-    Een foutmelding die een record noemt ("Invalid integer value '76, 85' for Field 't3' ..., record number 450004680")
-    is geen tijdelijke storing: het record staat in de bron fout en elke pagina die het bevat, faalt. Zo'n pagina wordt
+    Een foutmelding die een record noemt ("Invalid integer value '76, 85' for Field 't3' ..., record number 450004680", of
+    "Tag 'b%' not found in database 'document' in record '143525'") is geen tijdelijke storing: het record staat in de bron fout en elke pagina die het bevat, faalt. Zo'n pagina wordt
     in tweeën gedeeld, steeds verder, tot het ene kapotte record overblijft. De rest van de pagina komt gewoon binnen.
     Geeft (pagina, [priref's die niet te lezen waren]). Een andere fout (zonder record) wordt niet verholpen maar doorgegeven."""
     extra = {'fields': fields} if fields else {}                           # alleen meegeven als er velden zijn gekozen
